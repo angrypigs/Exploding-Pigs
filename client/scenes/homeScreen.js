@@ -17,14 +17,14 @@ export default function HomeScreen({ navigation }) {
   const socket = useContext(SocketContext);
 
   useEffect(() => {
-    socket.on("joinRoom", (code) => {
+    socket.on("joinRoom", (code, nickname, name) => {
         if (code) {
-            navigation.navigate("Room", {roomCode: code});
+            navigation.navigate("Room", {roomCode: code, nickname, name});
         } else {
-            alert("An problem occured when joining the room: make sure the room code is valid")
+            console.log(`Error while joining the room: ${nickname}`);
         }
     });
-    return () => socket.off("gameState");
+    return () => socket.off("joinRoom");
   }, [socket]);
 
   const handleRoomCreate = () => {
@@ -37,9 +37,11 @@ export default function HomeScreen({ navigation }) {
                 inputs.createName)
         } else {
             Alert.alert("", "Nickname is necessary");
+            console.log("Nickname is necessary");
         }
     } else {
         Alert.alert("", "Max players must be a number between 2 and 8");
+        console.log("Max players must be a number between 2 and 8");
     }
   }
 
@@ -52,9 +54,11 @@ export default function HomeScreen({ navigation }) {
                 inputs.joinName)
         } else {
             Alert.alert("", "Nickname is necessary");
+            console.log("Nickname is necessary");
         }
     } else {
         Alert.alert("", "Code must consist of five digits");
+        console.log("Code must consist of five digits");
     }
   }
 

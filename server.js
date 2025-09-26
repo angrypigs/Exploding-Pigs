@@ -20,13 +20,16 @@ io.on("connection", (socket) => {
 
   socket.on("joinRoom", (code, nickname, name) => {
     if (rooms.has(code)) {
-      socket.join(code);
-      rooms.get(code).add_player(socket.id, nickname, name);
-      socket.emit("joinRoom", code);
+      if (rooms.get(code).add_player(socket.id, nickname, name)) {
+        socket.join(code);
+        socket.emit("joinRoom", code, nickname, name);
+        io.to(code).emit("refreshRoom", rooms.get(code).get_player_list());
+      } else {
+        socket.emit("joinRoom", false, "Room is full");
+      }
     } else {
-      socket.emit("joinRoom", false);
+      socket.emit("joinRoom", false, "No room");
     }
-    console.log(`Client ${socket.id} sent code ${code}`);
   });
 
   socket.on("createRoom", (max_players, nickname, name) => {
@@ -41,9 +44,17 @@ io.on("connection", (socket) => {
     if (new_key !== null && max_players < 9) {
       rooms.set(new_key, new Room(max_players))
       rooms.get(new_key).add_player(socket.id, nickname, name);
-      socket.emit("joinRoom", new_key);
+      socket.emit("joinRoom", new_key, nickname, name);
     } else {
-      socket.emit("joinRoom", false);
+      socket.emit("joinRoom", false, "No room slots (come back later)");
+    }
+  });
+
+  socket.on("refreshRoom", (code) => {
+    if (rooms.has(code)) {
+      socket.emit("refreshRoom", rooms.get(code).get_player_list());
+    } else {
+      socket.emit("refreshRoom", null);
     }
   });
 
@@ -53,6 +64,7 @@ io.on("connection", (socket) => {
       if (room.players.has(socket.id)) {
         room.players.delete(socket.id);
         console.log(`Usunięto gracza ${socket.id} z pokoju ${code}`);
+        io.to(code).emit("refreshRoom", room.get_player_list());
         if (room.players.size === 0) {
           rooms.delete(code);
           console.log(`Pokój ${code} został usunięty, bo nie ma graczy`);

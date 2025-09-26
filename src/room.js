@@ -14,6 +14,14 @@ class Room {
         }
         else return false;
     }
+
+    get_player_list() {
+        const list = [];
+        for (const [id, player] of this.players.entries()) {
+            list.push({ id, nickname: player.nickname });
+        }
+        return list;
+    }
 }
 
 module.exports = { Room };
