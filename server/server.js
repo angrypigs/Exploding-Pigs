@@ -44,6 +44,7 @@ io.on("connection", (socket) => {
     if (new_key !== null && max_players < 9) {
       rooms.set(new_key, new Room(max_players))
       rooms.get(new_key).add_player(socket.id, nickname, name);
+      socket.join(new_key);
       socket.emit("joinRoom", new_key, nickname, name);
     } else {
       socket.emit("joinRoom", false, "No room slots (come back later)");
@@ -75,4 +76,4 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(4000, () => console.log("Serwer działa na http://localhost:4000"));
+server.listen(4000, "0.0.0.0", () => console.log("Serwer działa na http://localhost:4000"));

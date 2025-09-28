@@ -3,8 +3,7 @@ import { io } from "socket.io-client";
 
 export const SocketContext = createContext(null);
 
-// inicjalizujemy socket TYLKO raz
-const socket = io("http://localhost:4000");
+const socket = io("http://192.168.0.109:4000");
 
 export function SocketProvider({ children }) {
   return (
