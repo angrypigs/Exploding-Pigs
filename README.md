@@ -31,6 +31,6 @@ npx expo start
 ```
 ## Authors
 
-Bartosz Wilczek - [GitHub](https://github.com/angrypigs)
-Igor Mania - [GitHub](https://github.com/ziemniorcee)
-Jakub Kamiński - [GitHub](https://github.com/QBA8QBA)
+- Bartosz Wilczek - [GitHub](https://github.com/angrypigs)
+- Igor Mania - [GitHub](https://github.com/ziemniorcee)
+- Jakub Kamiński - [GitHub](https://github.com/QBA8QBA)
