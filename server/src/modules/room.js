@@ -1,4 +1,4 @@
-class Room {
+export class Room {
     constructor(max_players) {
         this.max_players = max_players;
         this.players = new Map();
@@ -23,5 +23,3 @@ class Room {
         return list;
     }
 }
-
-module.exports = { Room };
