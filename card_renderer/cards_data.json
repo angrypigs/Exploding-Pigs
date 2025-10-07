@@ -1,0 +1,137 @@
+{
+    "1": {
+        "name": "Exploding Pig",
+        "desc": "You have to defuse this card with Defusion Pig, if you don't have one you blow up",
+        "img": "1"
+    },
+    "2": {
+        "name": "Defusion Pig",
+        "desc": "It's only use is to defuse Exploding Pig, protect it at all costs!",
+        "img": "2"
+    },
+    "3": {
+        "name": "Skip",
+        "desc": "Skip this turn without picking a card",
+        "img": "3"
+    },
+    "4": {
+        "name": "Skip everything",
+        "desc": "Skip this round without picking a card, even if you have many turns on you",
+        "img": "4"
+    },
+    "5": {
+        "name": "Reverse",
+        "desc": "Reverse the game order and and one turn without picking a card",
+        "img": "5"
+    },
+    "6": {
+        "name": "Attack",
+        "desc": "Skip this turn without picking a card. Next player in the order has 2 turns",
+        "img": "6"
+    },
+    "7": {
+        "name": "Sniper",
+        "desc": "Skip this round without picking a card and choose a player (can be yourself) that will play 2 turns",
+        "img": "7"
+    },
+    "8": {
+        "name": "Shuffle",
+        "desc": "Shuffle the deck",
+        "img": "8"
+    },
+    "9_3": {
+        "name": "View the future (3 cards)",
+        "desc": "Take the three outerwear cards, look at them and put it back on the deck",
+        "img": "9"
+    },
+    "9_4": {
+        "name": "View the future (4 cards)",
+        "desc": "Take the four outerwear cards, look at them and put it back on the deck",
+        "img": "9"
+    },
+    "9_5": {
+        "name": "View the future (5 cards)",
+        "desc": "Take the five outerwear cards, look at them and put it back on the deck",
+        "img": "9"
+    },
+    "10_3": {
+        "name": "Change the future (3 cards)",
+        "desc": "Take the three outerwear cards, look at them (you can change the order of them) and put it back on the deck",
+        "img": "10"
+    },
+    "10_4": {
+        "name": "Change the future (4 cards)",
+        "desc": "Take the four outerwear cards, look at them (you can change the order of them) and put it back on the deck",
+        "img": "10"
+    },
+    "10_5": {
+        "name": "Change the future (5 cards)",
+        "desc": "Take the five outerwear cards, look at them (you can change the order of them) and put it back on the deck",
+        "img": "10"
+    },
+    "11": {
+        "name": "Fundraiser",
+        "desc": "Every player has to pick one card to add to the deck. After that the deck is shuffled",
+        "img": "11"
+    },
+    "12": {
+        "name": "Profanation",
+        "desc": "Profanate on of the player's cards - it will be visible for other players until it is stolen or used",
+        "img": "12"
+    },
+    "13": {
+        "name": "Nu Nu Nu",
+        "desc": "Stop the player's action, or negate other player's Nu Nu Nu. Can be used after several actions",
+        "img": "13"
+    },
+    "14_1": {
+        "name": "Cake",
+        "desc": "Use two of those cards to steal a card from the selected player",
+        "img": "14_1"
+    },
+    "14_2": {
+        "name": "Ice cream",
+        "desc": "Use two of those cards to steal a card from the selected player",
+        "img": "14_2"
+    },
+    "14_3": {
+        "name": "Cupcake",
+        "desc": "Use two of those cards to steal a card from the selected player",
+        "img": "14_3"
+    },
+    "14_4": {
+        "name": "Rum bomb",
+        "desc": "Use two of those cards to steal a card from the selected player",
+        "img": "14_4"
+    },
+    "14_5": {
+        "name": "Cake slice",
+        "desc": "Use two of those cards to steal a card from the selected player",
+        "img": "14_5"
+    },
+    "15": {
+        "name": "Candy pumpkin",
+        "desc": "Use as any of the sweet cards",
+        "img": "15"
+    },
+    "16": {
+        "name": "Favor",
+        "desc": "The player chosen by you has to give you chosen by him card (if he has any)",
+        "img": "16"
+    },
+    "17": {
+        "name": "Piggasaki",
+        "desc": "All the Exploding Pigs are on the top of the deck, the bottom part of deck is shuffled",
+        "img": "17"
+    },
+    "18": {
+        "name": "Hiropiga",
+        "desc": "All the Exploding Pigs are on the bottom of the deck, the top part of deck is shuffled",
+        "img": "18"
+    },
+    "19": {
+        "name": "Take from the bottom",
+        "desc": "Take the card in your turn from the bottom instead of top",
+        "img": "19"
+    }
+}

@@ -1,0 +1,57 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+button {
+    font-size: 32px;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+}
+
+#card {
+  width: 500px;
+  position: relative;
+  margin: 0 auto;
+}
+
+#card-frame {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+#card-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#card p {
+  max-width: 400px;
+  text-align: center;
+  margin: 0;
+  color: #5fa6ec;
+}
+
+#title {
+  font-size: 40px;
+  margin-top: auto;
+}
+
+#desc {
+  margin-bottom: auto;
+  padding-bottom: 20px;
+}
+
