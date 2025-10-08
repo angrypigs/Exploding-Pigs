@@ -42,4 +42,27 @@ export default function roomHandler(io, socket, rooms) {
     }
   });
 
+  socket.on("playerReady", (code) => 
+    {
+      if(rooms.has(code)){
+              let player = rooms.get(code).players.get(socket.id);
+              player.readyFlag=!player.readyFlag;
+              let counter = rooms.get(code).players.size-1;
+              for ( const [id , val] of rooms.get(code).players) {
+                    if (val.readyFlag) {
+                        counter=counter-1;
+                    }
+                }
+                if(!counter)
+                  {
+                    console.log("SERVER READY");
+                    io.to(code).emit("roomReady");
+                  }
+                  else
+                    {
+                      console.log("SERVER NOT READY");
+                    }
+        }
+    });
+
 }

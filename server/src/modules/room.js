@@ -8,7 +8,8 @@ export class Room {
         if (this.players.size < this.max_players) {
             this.players.set(id, {
                 nickname: nickname,
-                name: name
+                name: name,
+                readyFlag: false
             });
             return true;
         }
