@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Text, TouchableOpacity, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { stylesButton } from "../styles/style_custom_components";
+import { stylesButton } from "../../styles/style_custom_components";
 
 export function Button({ title, onPress }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
