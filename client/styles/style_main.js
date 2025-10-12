@@ -43,4 +43,12 @@ export const stylesMain = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  test: {
+      backgroundColor: "red",
+      width: 50,
+      height: 50,
+  },
+  testText: {
+      fontSize: 20,
+  }
 });

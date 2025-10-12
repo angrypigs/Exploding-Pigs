@@ -32,27 +32,11 @@ export default function HomeScreen({navigation}) {
 
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Exploding Pigs</Text>
+        <View style={stylesMain.container}>
+            <Text style={stylesMain.text}>Exploding Pigs</Text>
             <Button title="Join Room" onPress={() => navigation.navigate("JoinRoom")}/>
             <Button title="Create Room" onPress={() => navigation.navigate("CreateRoom")}/>
         </View>
     );
 }
 
-
-export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(143, 143, 143, 1)",
-    },
-    text: {
-        fontSize: 22,
-        fontWeight: "bold",
-    },
-})
