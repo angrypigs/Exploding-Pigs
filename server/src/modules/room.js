@@ -37,7 +37,7 @@ export class Room {
             }
         });
         shuffleArray(deck);
-        for (const key in this.players.keys()) {
+        for (const key of this.players.keys()) {
             this.players.get(key).cards.push(["2", true]);
             for (let i = 0; i < 7; i++) {
                 this.players.get(key).cards.push([deck.pop(), true]);
@@ -45,7 +45,7 @@ export class Room {
             shuffleArray(this.players.get(key).cards);
         }
         deck.push("2");
-        for (const key in this.players.keys()) {
+        for (const key of this.players.keys()) {
             deck.push("1");
         }
         this.deck = deck;
@@ -57,10 +57,10 @@ export class Room {
             res["deck"] = "0";
             res["thrown"] = this.thrown;
             const cards = {};
-            for (const key in this.players.keys()) {
+            for (const key of this.players.keys()) {
                 const hand = [];
                 for (const c of this.players.get(key).cards) {
-                    hand.push((c[1] || key === id) ? "0" : c[0]);
+                    hand.push((!c[1] || key === id) ? c[0] : "0");
                 }
                 cards[key] = hand;
             }
@@ -75,4 +75,4 @@ export class Room {
             return [["move", "deck", `${Array.from(myMap.keys()).indexOf(id)}:${this.players.get(id).cards.length + 1}`]];
         return null;
     }
-}
+} 
