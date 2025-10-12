@@ -62,8 +62,9 @@ export default function roomHandler(io, socket, rooms) {
                 io.to(code).emit("roomReady");
                 setTimeout(() => {
                     console.log("game start");
-                    for (const key in rooms.get(code).players.keys()) {
+                    for (const key of rooms.get(code).players.keys()) {
                         const res = rooms.get(code).serve_cards(key)
+                        console.log(res)
                         io.to(key).emit("refreshGame", {}, res["cards"], res["deck"], res["thrown"])
                     }
                 }, 10000);

@@ -3,15 +3,17 @@ import { Image, Pressable, StyleSheet } from "react-native";
 import { cards_data } from "../../utils";
 
 /**
- * @param {string} data - "deck", "thrown" or "<int>": card index in player's hand
  * @param {string} type - card's type
   */
-export default function Card({ type, onPress, data }) {
+export default function Card({ type, onPress, coords, width = 100, height = 150 }) {
   const card = cards_data[type];
   if (!card) return null;
+  console.log(coords);
 
   return (
-    <Pressable onPress={onPress} style={[styles.card]}>
+    <Pressable onPress={onPress} style={[styles.card, 
+      {width, height, left: coords[0] - width / 2, top: coords[1] - height / 2}
+    ]}>
       <Image
         source={card.img}
         resizeMode="contain"
@@ -23,6 +25,7 @@ export default function Card({ type, onPress, data }) {
 
 const styles = StyleSheet.create({
   card: {
+    position: 'absolute',
     width: 100,
     height: 150,
     margin: 5,
