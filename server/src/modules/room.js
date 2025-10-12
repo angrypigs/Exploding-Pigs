@@ -1,16 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const STARTING_CARD_COUNT = 5;
+import { shuffleArray, data } from "../utils.js";
 
 export class Room {
     constructor(max_players) {
         this.max_players = max_players;
-        this.deck = []
+        this.deck = [];
+        this.thrown = null;
         this.players = new Map();
     }
 
@@ -35,47 +29,50 @@ export class Room {
         return list;
     }
 
-    make_deck() {
-        const jsonPath = path.join(__dirname, '..', '..', '..', 'card_renderer', 'cards_data.json');
-
-        const fileContent = fs.readFileSync(jsonPath, 'utf8');
-        const cardData = JSON.parse(fileContent);
-
-        const deck = [];
-        for (const cardId in cardData) {
-            const cardInfo = cardData[cardId];
-            // Add a card to the deck for its 'count' number of times
-            for (let i = 0; i < cardInfo.count; i++) {
-                deck.push({ id: cardId, ...cardInfo });
-            }
-        }
-        return deck
-    }
-
     start_game() {
-        console.log("starting game")
-        this.deck = this.make_deck();
-
-        for (const player of this.players.values()) {
-            player.cards = this.draw_cards(STARTING_CARD_COUNT);
+        let deck = [];
+        Object.entries(data).map(([key, value]) => {
+            if (key !== "1" && key !== "2") {
+                deck = deck.concat(new Array(value.count).fill(key));
+            }
+        });
+        shuffleArray(deck);
+        for (const key in this.players.keys()) {
+            this.players.get(key).cards.push(["2", true]);
+            for (let i = 0; i < 7; i++) {
+                this.players.get(key).cards.push([deck.pop(), true]);
+            }
+            shuffleArray(this.players.get(key).cards);
         }
+        deck.push("2");
+        for (const key in this.players.keys()) {
+            deck.push("1");
+        }
+        this.deck = deck;
     }
 
-    draw_cards(amount) {
-        const drawnCards = [];
-
-        for (let i = 0; i < amount; i++) {
-            if (this.deck.length === 0) {
-                console.log("Not enough cards in the deck to draw the requested amount.");
-                break;
+    serve_cards(id) {
+        if (this.players.has(id)) {
+            const res = {};
+            res["deck"] = "0";
+            res["thrown"] = this.thrown;
+            const cards = {};
+            for (const key in this.players.keys()) {
+                const hand = [];
+                for (const c of this.players.get(key).cards) {
+                    hand.push((c[1] || key === id) ? "0" : c[0]);
+                }
+                cards[key] = hand;
             }
-
-            const randomIndex = Math.floor(Math.random() * this.deck.length);
-
-            const selectedCard = this.deck.splice(randomIndex, 1)[0];
-            drawnCards.push(selectedCard);
+            res["cards"] = cards;
+            return res;
         }
+        return null;
+    }
 
-        return drawnCards;
+    take_card(id) {
+        if (this.deck.length && this.players.has(id))
+            return [["move", "deck", `${Array.from(myMap.keys()).indexOf(id)}:${this.players.get(id).cards.length + 1}`]];
+        return null;
     }
 }

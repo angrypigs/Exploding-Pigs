@@ -38,7 +38,7 @@ export default function roomHandler(io, socket, rooms) {
         if (rooms.has(code)) {
             socket.emit("refreshRoom", rooms.get(code).get_player_list());
         } else {
-            socket.emit("refreshRoom", null);
+            socket.emit("refreshGame", null);
         }
     });
 
@@ -60,6 +60,13 @@ export default function roomHandler(io, socket, rooms) {
                 console.log("SERVER READY");
                 rooms.get(code).start_game();
                 io.to(code).emit("roomReady");
+                setTimeout(() => {
+                    console.log("game start");
+                    for (const key in rooms.get(code).players.keys()) {
+                        const res = rooms.get(code).serve_cards(key)
+                        io.to(key).emit("refreshGame", {}, res["cards"], res["deck"], res["thrown"])
+                    }
+                }, 10000);
             } else {
                 console.log("SERVER NOT READY");
             }

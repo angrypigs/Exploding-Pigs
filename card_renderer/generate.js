@@ -34,6 +34,16 @@ async function generateCards() {
     console.log(`Wygenerowano: ${key}.png`);
   }
 
+  const cardTemplateBack = `
+    <div id="card" style="background-color: #000000;">
+      <div id="card-container">
+      </div>
+    </div>`;
+  const fullHtml = `<!doctype html><html><head><meta charset="utf-8"><style>${cssTemplate}</style></head><body>${cardTemplateBack}</body></html>`;
+  const buffer = await nodeHtmlToImage({ html: fullHtml, type: 'png', encoding: 'binary',
+  selector: '#card', transparent: true });
+    fs.writeFileSync(path.join(outputDir, `0.png`), buffer);
+
   console.log('Wszystkie karty zapisane w folderze output_cards');
 }
 
