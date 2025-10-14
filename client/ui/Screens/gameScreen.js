@@ -27,22 +27,29 @@ export default function GameScreen({ navigation }) {
                 setDeck(deck);
                 setAnims(anims);
                 console.log(cards);
+                console.log(anims);
             }
         });
         return () => socket.off("refreshGame");
     }, [socket]);
 
-  return (
-    <View style={stylesMain.container}>
-        <Text style={stylesMain.text}>Room code: {roomCode}</Text>
-        <Text style={stylesMain.text}>Nickname: {nickname}</Text>
-        {Object.entries(cards).map(([p, arr], j) => 
-            arr.map((c, i) => (
-                <Card key={`${p}-${i}`} type={c} onPress={() => console.log(c)} coords={[width / 2 - 200 + i * 50, 200 * (j + 1)]} />
-            ))
-        )}
-        {thrown && <Card type={thrown} onPress={() => console.log(thrown)} coords={[width / 2 + 100, height - 100]} />}
-        {deck && <Card type={deck} onPress={() => console.log(deck)} coords={[width / 2, height - 100]} />}
-    </View>
-  );
+    const handleTakeCard = () => {
+        socket.emit("takeCard", roomCode);
+    }
+
+    return (
+        <View style={stylesMain.container}>
+            <View style={stylesMain.header}>
+                <Text style={stylesMain.text}>Room code: {roomCode}</Text>
+                <Text style={stylesMain.text}>Nickname: {nickname}</Text>
+            </View>
+            {Object.entries(cards).map(([p, arr], j) => 
+                arr.map((c, i) => (
+                    <Card key={`${p}-${i}`} type={c} onPress={() => console.log(c)} coords={[width / 2 - 200 + i * 50, 200 * (j + 1)]} />
+                ))
+            )}
+            {thrown && <Card type={thrown} onPress={() => console.log(thrown)} coords={[width / 2 + 100, height - 100]} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[width / 2, height - 100]} />}
+        </View>
+    );
 }

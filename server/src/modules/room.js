@@ -1,4 +1,4 @@
-import { shuffleArray, data } from "../utils.js";
+import { rotateArray, shuffleArray, data } from "../utils.js";
 
 export class Room {
     constructor(max_players) {
@@ -6,6 +6,11 @@ export class Room {
         this.deck = [];
         this.thrown = null;
         this.players = new Map();
+        this.room_closed = false;
+        this.queue = [];
+        this.queue_p = 0;
+        this.queue_dir = true;
+        this.turns = 1;
     }
 
     add_player(id, nickname, name) {
@@ -37,17 +42,21 @@ export class Room {
             }
         });
         shuffleArray(deck);
+        let counter = 0;
         for (const key of this.players.keys()) {
             this.players.get(key).cards.push(["2", true]);
             for (let i = 0; i < 7; i++) {
                 this.players.get(key).cards.push([deck.pop(), true]);
             }
             shuffleArray(this.players.get(key).cards);
+            this.queue.push([key, 'player' + counter])
+            counter += 1;
         }
         deck.push("2");
         for (const key of this.players.keys()) {
             deck.push("1");
         }
+        shuffleArray(deck);
         this.deck = deck;
     }
 
@@ -56,13 +65,16 @@ export class Room {
             const res = {};
             res["deck"] = "0";
             res["thrown"] = this.thrown;
+
+            const index = this.queue.findIndex(([socketId]) => socketId === id);
+            const rotatedQueue = rotateArray(this.queue, index);
             const cards = {};
-            for (const key of this.players.keys()) {
+            for (const [socketId, playerName] of rotatedQueue) {
                 const hand = [];
-                for (const c of this.players.get(key).cards) {
-                    hand.push((!c[1] || key === id) ? c[0] : "0");
+                for (const c of this.players.get(socketId).cards) {
+                    hand.push((!c[1] || socketId === id) ? c[0] : "0");
                 }
-                cards[key] = hand;
+                cards[playerName] = hand;
             }
             res["cards"] = cards;
             return res;
@@ -70,9 +82,28 @@ export class Room {
         return null;
     }
 
+    handle_queue() {
+        if (this.turns === 1) {
+            if (this.queue_dir) this.queue_p = (this.queue_p + 1) % this.queue.length;
+            else this.queue_p = (this.queue_p - 1 + this.queue.length) % this.queue.length;
+        }
+            
+    }
+
     take_card(id) {
-        if (this.deck.length && this.players.has(id))
-            return [["move", "deck", `${Array.from(myMap.keys()).indexOf(id)}:${this.players.get(id).cards.length + 1}`]];
+        if (this.deck.length && this.players.has(id) && this.queue[this.queue_p][0] === id) {
+            let index = this.queue.findIndex(s => s[0] === id);
+            this.players.get(id).cards.push(this.deck.pop());
+            
+            return [["move", "deck", `${this.queue[index][1]}:${this.players.get(id).cards.length + 1}`]];
+        }
         return null;
+    }
+
+    print_game() {
+        console.log(`Deck - ${this.deck}`);
+        for (const l of this.queue) {
+            console.log(`${l[0]} - ${this.players.get(l[0]).cards}`);
+        }
     }
 } 
