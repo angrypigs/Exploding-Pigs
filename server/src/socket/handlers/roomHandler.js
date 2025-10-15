@@ -3,7 +3,8 @@ import {Room} from "../../modules/room.js";
 export default function roomHandler(io, socket, rooms) {
     socket.on("joinRoom", (code, nickname, name) => {
         if (rooms.has(code)) {
-            if (rooms.get(code).add_player(socket.id, nickname, name)) {
+            let room = rooms.get(code);
+            if (room.add_player(socket.id, nickname, name) && !room.room_closed) {
                 socket.join(code);
                 socket.emit("joinRoom", code, nickname, name);
                 io.to(code).emit("refreshRoom", rooms.get(code).get_player_list());
@@ -56,6 +57,7 @@ export default function roomHandler(io, socket, rooms) {
                 }
             }
 
+            rooms.get(code).room_closed = isAllReady;
             if (isAllReady) {
                 console.log("SERVER READY");
                 rooms.get(code).start_game();
@@ -63,11 +65,10 @@ export default function roomHandler(io, socket, rooms) {
                 setTimeout(() => {
                     console.log("game start");
                     for (const key of rooms.get(code).players.keys()) {
-                        const res = rooms.get(code).serve_cards(key)
-                        console.log(res)
-                        io.to(key).emit("refreshGame", {}, res["cards"], res["deck"], res["thrown"])
+                        const res = rooms.get(code).serve_cards(key);
+                        io.to(key).emit("refreshGame", null, res["cards"], res["deck"], res["thrown"]);
                     }
-                }, 10000);
+                }, 2000);
             } else {
                 console.log("SERVER NOT READY");
             }

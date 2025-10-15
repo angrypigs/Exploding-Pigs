@@ -8,7 +8,6 @@ import { cards_data } from "../../utils";
 export default function Card({ type, onPress, coords, width = 100, height = 150 }) {
   const card = cards_data[type];
   if (!card) return null;
-  console.log(coords);
 
   return (
     <Pressable onPress={onPress} style={[styles.card, 

@@ -39,10 +39,11 @@ export default function RoomScreen({ navigation }) {
 
     return (
         <View style={stylesMain.container}>
-            <Text style={stylesMain.text}>Game Room</Text>
-            <Text style={stylesMain.text}>Room code: {roomCode}</Text>
-            <Text style={stylesMain.text}>Nickname: {nickname}</Text>
-            {name ? <Text style={stylesMain.text}>Name: {name}</Text> : null}
+            <View style={stylesMain.header}>
+                <Text style={stylesMain.text}>Game Room {roomCode}</Text>
+                <Text style={stylesMain.text}>Nickname: {nickname}</Text>
+                {name ? <Text style={stylesMain.text}>Name: {name}</Text> : null}
+            </View>
             <PlayerList players={players} setPlayers={setPlayers}/>
             <Button title="Ready" onPress={handlePlayerReady}/>
         </View>

@@ -1,36 +1,56 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet } from "react-native";
-import Card from "./card";
+import React, { useEffect } from 'react';
+import { Image } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  runOnJS,
+} from 'react-native-reanimated';
 
-export default function AnimatedCardOverlay({ from, to, type, data, onFinish }) {
-  const pos = useRef(new Animated.ValueXY(from)).current;
+import { cards_data } from '../../utils';
+
+export default function AnimatedCard({ animData, onFinish }) {
+  const w = animData.width ?? 100;
+  const h = animData.height ?? 150;
+  const card = cards_data[animData.type];
+  console.log(animData)
+
+  const x = useSharedValue(animData.x); // środek startowy X
+  const y = useSharedValue(animData.y); // środek startowy Y
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: x.value - w / 2, // żeby środek karty był w x.value
+    top: y.value - h / 2,  // żeby środek karty był w y.value
+    width: w,
+    height: h,
+    opacity: 1,
+  }));
 
   useEffect(() => {
-    Animated.timing(pos, {
-      toValue: to,
-      duration: 600,
-      useNativeDriver: true,
-    }).start(() => {
-      if (onFinish) onFinish();
-    });
+    const delay = animData.delay ?? 0;
+
+    x.value = withDelay(
+      delay,
+      withTiming(animData.targetX, { duration: 800 })
+    );
+
+    y.value = withDelay(
+      delay,
+      withTiming(animData.targetY, { duration: 800 }, (finished) => {
+        if (finished) runOnJS(onFinish)();
+      })
+    );
   }, []);
 
+  if (!card) return null;
+
   return (
-    <Animated.View
-      style={[
-        styles.absolute,
-        { transform: pos.getTranslateTransform() },
-      ]}
-    >
-      <Card type={type} data={data} />
-    </Animated.View>
+    <Animated.Image
+      source={card.img}
+      resizeMode="contain"
+      style={style}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  absolute: {
-    position: "absolute",
-    width: 100,
-    height: 150,
-  },
-});
