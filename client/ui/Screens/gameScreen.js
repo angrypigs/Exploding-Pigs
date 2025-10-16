@@ -23,8 +23,7 @@ function coordsAnimHandler(target) {
     if (target === "thrown" || 
         target === "deck") return { ...coords[target] };
     let points = target.split(":").map(Number);
-    console.log(points)
-    return {x: coords.card.x(points[1]), y: coords.card.y(points[0])}
+    return {x: coords.card.x(0), y: coords.card.y(points[0])}
 }
 
 export default function GameScreen({ navigation }) {
@@ -37,47 +36,55 @@ export default function GameScreen({ navigation }) {
     const [deck, setDeck] = useState(null);
     const [anims, setAnims] = useState(null);
     const [animTrigger, setAnimTrigger] = useState(false);
+    const [turnPointer, setTurnPointer] = useState(null);
 
     const cards_ref = useRef({});
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
-
 
     useEffect(() => {
         if (anims === null) {
             setCards(cards_ref.current);
             setThrown(thrown_ref.current);
             setDeck(deck_ref.current);
-            console.log(cards);
-            console.log(deck);
         }
     }, [animTrigger]);
 
     useEffect(() => {
         socket.on("refreshGame", (newAnims, cards, deck, thrown) => {
-            cards_ref.current = cards;
-            thrown_ref.current = thrown;
-            deck_ref.current = deck;
-            console.log(newAnims)
-            console.log(cards_ref.current)
-            let tempAnims = null;
-            if (newAnims) {
-                tempAnims = {};
-                for (const a of newAnims) {
-                    if (a[0] === "move") {
-                        let c_start = coordsAnimHandler(a[1]);
-                        let c_end = coordsAnimHandler(a[2]);
-                        tempAnims[uuid.v4()] = {
-                            type: "move", x: c_start.x, y: c_start.y,
-                            targetX: c_end.x, targetY: c_end.y, type: a[3]
+            if (newAnims !== false) { // null as no animations, false as error / deny of move
+                cards_ref.current = cards;
+                thrown_ref.current = thrown;
+                deck_ref.current = deck;
+                // console.log(`New cards: ${cards_ref.current}`)
+                let tempAnims = null;
+                if (newAnims) {
+                    tempAnims = {};
+                    for (const a of newAnims) {
+                        if (a[0] === "move") {
+                            let c_start = coordsAnimHandler(a[1]);
+                            let c_end = coordsAnimHandler(a[2]);
+                            tempAnims[uuid.v4()] = {
+                                type: "move", x: c_start.x, y: c_start.y,
+                                targetX: c_end.x, targetY: c_end.y, type: a[3]
+                            }
                         }
                     }
                 }
+                setAnims(prev => {
+                    if (!prev) return tempAnims;
+                    return { ...prev, ...tempAnims };
+                });
+                setAnimTrigger(prev => !prev);
             }
-            setAnims(tempAnims);
-            setAnimTrigger(prev => !prev);
         });
         return () => socket.off("refreshGame");
+    }, [socket]);
+
+    useEffect(() => {
+        socket.on("nextTurn", (data) => {
+            setTurnPointer(data);
+        });
     }, [socket]);
 
     const handleTakeCard = () => {
@@ -90,6 +97,7 @@ export default function GameScreen({ navigation }) {
         delete next[id];
         if (Object.keys(next).length === 0) {
             setAnimTrigger(prev => !prev);
+            socket.emit("nextTurn", roomCode); 
             return null;
         }
         return next;
@@ -111,11 +119,14 @@ export default function GameScreen({ navigation }) {
             {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} />}
             {anims && Object.entries(anims).map(([uuid, animData]) => (
                 <AnimatedCard
-                    key={uuid}                 // unikalny klucz dla React
-                    animData={animData}        // cały słownik z danymi animacji
-                    onFinish={() => removeAnim(uuid)} // callback po zakończeniu animacji
+                    key={uuid}
+                    animData={animData}
+                    onFinish={() => removeAnim(uuid)}
                 />
             ))}
+            {turnPointer && <Text style={[stylesMain.text, {
+                position: 'absolute', top: 20, left: 20
+            }]}>Turn for player {turnPointer[0]}{'\n'} ({turnPointer[1]} turns)</Text>}
         </View>
     );
 }
