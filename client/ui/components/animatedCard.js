@@ -14,15 +14,14 @@ export default function AnimatedCard({ animData, onFinish }) {
   const w = animData.width ?? 100;
   const h = animData.height ?? 150;
   const card = cards_data[animData.type];
-  console.log(animData)
 
-  const x = useSharedValue(animData.x); // środek startowy X
-  const y = useSharedValue(animData.y); // środek startowy Y
+  const x = useSharedValue(animData.x);
+  const y = useSharedValue(animData.y);
 
   const style = useAnimatedStyle(() => ({
     position: 'absolute',
-    left: x.value - w / 2, // żeby środek karty był w x.value
-    top: y.value - h / 2,  // żeby środek karty był w y.value
+    left: x.value - w / 2,
+    top: y.value - h / 2,
     width: w,
     height: h,
     opacity: 1,
