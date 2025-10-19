@@ -59,7 +59,6 @@ export default function roomHandler(io, socket, rooms) {
 
             rooms.get(code).room_closed = isAllReady;
             if (isAllReady) {
-                console.log("SERVER READY");
                 rooms.get(code).start_game();
                 io.to(code).emit("roomReady");
                 setTimeout(() => {
