@@ -40,23 +40,23 @@ export default function CreateRoomScreen({navigation}) {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.subcontainer}>
-                <Text style={styles.text}>Create Room</Text>
-                <TextInput style={styles.input}
+        <View style={stylesMain.container}>
+            <View style={stylesMain.subcontainer}>
+                <Text style={stylesMain.text}>Create Room</Text>
+                <TextInput style={stylesMain.input}
                            value={inputs.createMaxPlayers}
                            onChangeText={(text) => setInputs({...inputs, createMaxPlayers: text})}
                            placeholder="Max players {between 2 and 8}"/>
-                <TextInput style={styles.input}
+                <TextInput style={stylesMain.input}
                            value={inputs.createNickname}
                            onChangeText={(text) => setInputs({...inputs, createNickname: text})}
                            placeholder="Nickname"/>
-                <TextInput style={styles.input}
+                <TextInput style={stylesMain.input}
                            value={inputs.createName}
                            onChangeText={(text) => setInputs({...inputs, createName: text})}
                            placeholder="Name {optional}"/>
-                <TouchableOpacity style={styles.test} onPress={handleSkip}><Text
-                    style={styles.testText}>Skip</Text>
+                <TouchableOpacity style={stylesMain.test} onPress={handleSkip}><Text
+                    style={stylesMain.testText}>Skip</Text>
                 </TouchableOpacity>
                 <Button title="Create Room" onPress={handleRoomCreate}/>
                 <Button title="Home" onPress={() => navigation.navigate("Home")}/>
@@ -64,56 +64,3 @@ export default function CreateRoomScreen({navigation}) {
         </View>
     )
 }
-
-export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(143, 143, 143, 1)",
-    },
-    subcontainer: {
-        width: "90%",
-        borderRadius: 20,
-        borderStyle: "solid",
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(114, 114, 114, 1)",
-    },
-    text: {
-        fontSize: 22,
-        fontWeight: "bold",
-    },
-    input: {
-        width: "90%",
-        backgroundColor: "#fff",
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        fontSize: 16,
-        color: "#333",
-        marginVertical: 5,
-        textAlign: "center",
-
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    test: {
-        backgroundColor: "red",
-        width: 50,
-        height: 50,
-    },
-    testText: {
-        fontSize: 20,
-    }
-})

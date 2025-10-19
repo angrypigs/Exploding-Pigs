@@ -1,52 +1,132 @@
 import { SocketContext } from "../../contexts/socketContext";
-import React, { useState, useContext, useEffect } from "react";
-import {View, Text, Button, StyleSheet} from "react-native";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import { View, Text, Dimensions } from "react-native";
 import { useRoute } from "@react-navigation/native";
+import uuid from 'react-native-uuid';
 
 import { stylesMain } from "../../styles/style_main";
-import { PlayerList } from "../components/player_list";
-import { stylesButton } from "../../styles/style_custom_components";
+import Card from "../components/card";
+import AnimatedCard from "../components/animatedCard";
+
+const { width, height } = Dimensions.get('window');
+
+const coords = {
+    thrown: {x: width / 2 + 100, y: height - 100},
+    deck: {x: width / 2, y: height - 100},
+    card: {
+        x: (c) => width / 2 - 200 + c * 50,
+        y: (p) => 200 * (p + 1)
+    }
+}
+
+function coordsAnimHandler(target) {
+    if (target === "thrown" || 
+        target === "deck") return { ...coords[target] };
+    let points = target.split(":").map(Number);
+    return {x: coords.card.x(0), y: coords.card.y(points[0])}
+}
 
 export default function GameScreen({ navigation }) {
     const socket = useContext(SocketContext);
-
     const route = useRoute();
     const { roomCode, nickname, name } = route.params;
 
-    const [players, setPlayers] = useState([]);
+    const [cards, setCards] = useState({});
+    const [thrown, setThrown] = useState(null);
+    const [deck, setDeck] = useState(null);
+    const [anims, setAnims] = useState(null);
+    const [animTrigger, setAnimTrigger] = useState(false);
+    const [turnPointer, setTurnPointer] = useState(null);
+
+    const cards_ref = useRef({});
+    const thrown_ref = useRef(null);
+    const deck_ref = useRef(null);
 
     useEffect(() => {
-        socket.on("refreshRoom", (newPlayers) => {
-            if (newPlayers) setPlayers(newPlayers);
-        });
-        return () => socket.off("refreshRoom");
-        }, [socket]);
-    
-    socket.emit("refreshRoom", roomCode);
+        if (anims === null) {
+            setCards(cards_ref.current);
+            setThrown(thrown_ref.current);
+            setDeck(deck_ref.current);
+        }
+    }, [animTrigger]);
 
-  return (
-    <View style={styles.container}>
-        <Text style={styles.text}>Game 💀 Room</Text>
-        <Text style={styles.text}>Room code: {roomCode}</Text>
-        <Text style={styles.text}>Nickname: {nickname}</Text>
-        {name ? <Text style={styles.text}>Name: {name}</Text> : null}
-        <PlayerList players={players} setPlayers={setPlayers} />
-    </View>
-  );
+    useEffect(() => {
+        socket.on("refreshGame", (newAnims, cards, deck, thrown) => {
+            if (newAnims !== false) { // null as no animations, false as error / deny of move
+                cards_ref.current = cards;
+                thrown_ref.current = thrown;
+                deck_ref.current = deck;
+                // console.log(`New cards: ${cards_ref.current}`)
+                let tempAnims = null;
+                if (newAnims) {
+                    tempAnims = {};
+                    for (const a of newAnims) {
+                        if (a[0] === "move") {
+                            let c_start = coordsAnimHandler(a[1]);
+                            let c_end = coordsAnimHandler(a[2]);
+                            tempAnims[uuid.v4()] = {
+                                type: "move", x: c_start.x, y: c_start.y,
+                                targetX: c_end.x, targetY: c_end.y, type: a[3]
+                            }
+                        }
+                    }
+                }
+                setAnims(prev => {
+                    if (!prev) return tempAnims;
+                    return { ...prev, ...tempAnims };
+                });
+                setAnimTrigger(prev => !prev);
+            }
+        });
+        return () => socket.off("refreshGame");
+    }, [socket]);
+
+    useEffect(() => {
+        socket.on("nextTurn", (data) => {
+            setTurnPointer(data);
+        });
+    }, [socket]);
+
+    const handleTakeCard = () => {
+        socket.emit("takeCard", roomCode); 
+    }
+
+    const removeAnim = (id) => {
+    setAnims(prev => {
+        const next = { ...prev };
+        delete next[id];
+        if (Object.keys(next).length === 0) {
+            setAnimTrigger(prev => !prev);
+            socket.emit("nextTurn", roomCode); 
+            return null;
+        }
+        return next;
+    });
 }
 
-export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(143, 143, 143, 1)",
-    },
-    text: {
-        fontSize: 22,
-        fontWeight: "bold",
-    },
-})
+    return (
+        <View style={stylesMain.container}>
+            <View style={stylesMain.header}>
+                <Text style={stylesMain.text}>Room code: {roomCode}</Text>
+                <Text style={stylesMain.text}>Nickname: {nickname}</Text>
+            </View>
+            {cards && Object.entries(cards).map(([p, arr], j) => 
+                arr.map((c, i) => (
+                    <Card key={`${p}-${i}`} type={c} onPress={() => console.log(c)} coords={[coords.card.x(i), coords.card.y(j)]} />
+                ))
+            )}
+            {thrown && <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} />}
+            {anims && Object.entries(anims).map(([uuid, animData]) => (
+                <AnimatedCard
+                    key={uuid}
+                    animData={animData}
+                    onFinish={() => removeAnim(uuid)}
+                />
+            ))}
+            {turnPointer && <Text style={[stylesMain.text, {
+                position: 'absolute', top: 20, left: 20
+            }]}>Turn for player {turnPointer[0]}{'\n'} ({turnPointer[1]} turns)</Text>}
+        </View>
+    );
+}

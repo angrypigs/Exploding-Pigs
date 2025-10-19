@@ -1,5 +1,5 @@
 import {stylesMain} from "../../styles/style_main";
-import {Alert, Text, TextInput, View, StyleSheet, TouchableOpacity} from "react-native";
+import {Alert, Text, TextInput, View, TouchableOpacity} from "react-native";
 import {Button} from "../components/button";
 import React, {useContext, useState} from "react";
 import {isGameCode} from "../../utils";
@@ -39,23 +39,23 @@ export default function JoinRoomScreen({navigation}) {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.subcontainer}>
-                <Text style={styles.text}>Join Room</Text>
-                <TextInput style={styles.input}
+        <View style={stylesMain.container}>
+            <View style={stylesMain.subcontainer}>
+                <Text style={stylesMain.text}>Join Room</Text>
+                <TextInput style={stylesMain.input}
                            value={inputs.joinCode}
                            onChangeText={(text) => setInputs({...inputs, joinCode: text})}
                            placeholder="Room code"/>
-                <TextInput style={styles.input}
+                <TextInput style={stylesMain.input}
                            value={inputs.joinNickname}
                            onChangeText={(text) => setInputs({...inputs, joinNickname: text})}
                            placeholder="Nickname"/>
-                <TextInput style={styles.input}
+                <TextInput style={stylesMain.input}
                            value={inputs.joinName}
                            onChangeText={(text) => setInputs({...inputs, joinName: text})}
                            placeholder="Name {optional}"/>
-                <TouchableOpacity style={styles.test} onPress={handleSkip}><Text
-                    style={styles.testText}>Skip</Text>
+                <TouchableOpacity style={stylesMain.test} onPress={handleSkip}><Text
+                    style={stylesMain.testText}>Skip</Text>
                 </TouchableOpacity>
                 <Button title="Join Room" onPress={handleRoomJoin}/>
                 <Button title="Home" onPress={() => navigation.navigate("Home")}/>
@@ -63,57 +63,3 @@ export default function JoinRoomScreen({navigation}) {
         </View>
     )
 }
-
-export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(143, 143, 143, 1)",
-    },
-    subcontainer: {
-        width: "90%",
-        borderRadius: 20,
-        borderStyle: "solid",
-        flex: 1,
-        justifyContent: "center",
-        gap: 20,
-        alignItems: "center",
-        textAlign: "center",
-        padding: 20,
-        backgroundColor: "rgba(114, 114, 114, 1)",
-    },
-    text: {
-        fontSize: 22,
-        fontWeight: "bold",
-    },
-    input: {
-        width: "90%",
-        backgroundColor: "#fff",
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        fontSize: 16,
-        color: "#333",
-        marginVertical: 5,
-        textAlign: "center",
-
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: {width: 0, height: 2},
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    test: {
-        backgroundColor: "red",
-        width: 50,
-        height: 50,
-    },
-    testText: {
-        fontSize: 20,
-
-    }
-})

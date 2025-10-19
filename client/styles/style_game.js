@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export const stylesMain = StyleSheet.create({
+export const stylesGame = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",

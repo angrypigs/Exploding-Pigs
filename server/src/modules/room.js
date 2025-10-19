@@ -1,17 +1,23 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const STARTING_CARD_COUNT = 5;
+import { rotateArray, shuffleArray, data } from "../utils.js";
 
 export class Room {
     constructor(max_players) {
         this.max_players = max_players;
-        this.deck = []
+        this.deck = [];
+        this.thrown = null;
         this.players = new Map();
+        this.room_closed = false;
+
+        this.queue = [];
+        this.queue_p = 0;
+        this.queue_dir = true;
+        this.turns = 1;
+        this.turns_temp = 0;
+        this.queue_p_temp = -1;
+
+        this.last_state = null;
+        this.negable = false;
+        this.change_flag = true;
     }
 
     add_player(id, nickname, name) {
@@ -20,11 +26,12 @@ export class Room {
                 nickname: nickname,
                 name: name,
                 readyFlag: false,
+                nextTurn: false,
                 cards: []
             });
             return true;
         }
-        else return false;
+        return false;
     }
 
     get_player_list() {
@@ -35,47 +42,101 @@ export class Room {
         return list;
     }
 
-    make_deck() {
-        const jsonPath = path.join(__dirname, '..', '..', '..', 'card_renderer', 'cards_data.json');
-
-        const fileContent = fs.readFileSync(jsonPath, 'utf8');
-        const cardData = JSON.parse(fileContent);
-
-        const deck = [];
-        for (const cardId in cardData) {
-            const cardInfo = cardData[cardId];
-            // Add a card to the deck for its 'count' number of times
-            for (let i = 0; i < cardInfo.count; i++) {
-                deck.push({ id: cardId, ...cardInfo });
-            }
+    save_state() {
+        this.change_flag = false;
+        this.last_state = {cards: {}, 
+            thrown: this.thrown, 
+            deck: { ...this.deck }
         }
-        return deck
+        for (const key of this.players.keys()) {
+            this.last_state.cards[key] = { ...this.players.get(key).cards }
+        }
     }
+
+    save_state_action(action) {
+        this.last_state["action"] = action;
+        this.change_flag = true;
+    }
+
+    print_game() {
+        console.log(`Deck - ${this.deck}`);
+        for (const [socketId, idx] of this.queue) {
+            console.log(`${socketId} - ${this.players.get(socketId).cards}`);
+        }
+    }
+
+    get_queue_index(id) { return this.queue.findIndex(s => s[0] === id) }
 
     start_game() {
-        console.log("starting game")
-        this.deck = this.make_deck();
-
-        for (const player of this.players.values()) {
-            player.cards = this.draw_cards(STARTING_CARD_COUNT);
+        let deck = [];
+        Object.entries(data).forEach(([key, value]) => {
+            if (key !== "1" && key !== "2") {
+                deck = deck.concat(new Array(value.count).fill(key));
+            }
+        });
+        shuffleArray(deck);
+        let counter = 0;
+        for (const key of this.players.keys()) {
+            this.players.get(key).cards.push(["2", true]);
+            for (let i = 0; i < 7; i++) {
+                this.players.get(key).cards.push([deck.pop(), true]);
+            }
+            shuffleArray(this.players.get(key).cards);
+            this.queue.push([key, counter]);
+            counter++;
         }
+        deck.push("2");
+        for (const key of this.players.keys()) {
+            deck.push("1");
+        }
+        shuffleArray(deck);
+        this.deck = deck;
     }
 
-    draw_cards(amount) {
-        const drawnCards = [];
-
-        for (let i = 0; i < amount; i++) {
-            if (this.deck.length === 0) {
-                console.log("Not enough cards in the deck to draw the requested amount.");
-                break;
+    serve_cards(id) {
+        if (!this.players.has(id)) return null;
+        const res = {};
+        res["deck"] = "0";
+        res["thrown"] = this.thrown;
+        const index = this.queue.findIndex(([socketId]) => socketId === id);
+        const rotatedQueue = rotateArray(this.queue, index);
+        const cards = {};
+        for (const [socketId] of rotatedQueue) {
+            const hand = [];
+            for (const c of this.players.get(socketId).cards) {
+                hand.push((!c[1] || socketId === id) ? c[0] : "0");
             }
-
-            const randomIndex = Math.floor(Math.random() * this.deck.length);
-
-            const selectedCard = this.deck.splice(randomIndex, 1)[0];
-            drawnCards.push(selectedCard);
+            const playerIndex = this.queue.findIndex(s => s[0] === socketId);
+            cards[playerIndex] = hand;
         }
+        res["cards"] = cards;
+        return res;
+    }
 
-        return drawnCards;
+    handle_queue() {
+        if (this.turns === 0) {
+            if (this.queue_dir) this.queue_p = (this.queue_p + 1) % this.queue.length;
+            else this.queue_p = (this.queue_p - 1 + this.queue.length) % this.queue.length;
+            if (this.queue_p_temp !== -1) this.queue_p = this.queue_p_temp;
+            if (this.turns_temp) this.turns = this.turns_temp;
+            else this.turns = 1;
+        }
+        return [this.queue_p, this.turns];
+    }
+
+    take_card(id) {
+        if (this.deck.length && 
+            this.players.has(id) && 
+            this.queue[this.queue_p][0] === id &&
+            this.turns > 0) {
+            this.turns -= 1;
+            this.save_state();
+            this.negable = false;
+            this.players.get(id).cards.push([this.deck.pop(), true]);
+            let action = [["move", "deck", `${this.get_queue_index(id)}`, "0"]]
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 }
