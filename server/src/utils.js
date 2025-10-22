@@ -12,7 +12,6 @@ export function shuffleArray(arr) {
 
 export function rotateArray(arr, shift) {
     const n = arr.length;
-    // ujemne lub większe niż długość przesunięcie -> dopasowujemy
     const k = ((shift % n) + n) % n;  
-    return arr.slice(-k).concat(arr.slice(0, -k));
+    return arr.slice(k).concat(arr.slice(0, k));
 }
