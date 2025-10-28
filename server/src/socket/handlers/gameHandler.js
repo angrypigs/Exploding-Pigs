@@ -41,6 +41,28 @@ export default function gameHandler(io, socket, rooms) {
         const room = rooms.get(code);
         if (room) {
             console.log(`${code} + ${cardsSelected}`);
+
+            // verify cards
+            const playerCards = room.players.get(socket.id).cards;
+            let minIndex = Math.min.apply(null, cardsSelected);
+            let maxIndex = Math.max.apply(null, cardsSelected);
+
+            if (minIndex >= 0 && maxIndex <= playerCards.length) {
+                console.log("correct throw");
+                // match the corect action
+                for (index in cardsSelected) {
+                    //stworzyc akcje na podstawie karty na indeksie
+
+                }
+
+
+                // send a return statement to delete cards on client side and put them on the pile
+
+                // flip the turn , skip the turn or take card from bottom
+            } else {
+                console.log("not correct throw");
+                //Eror
+            }
         } else {
             socket.emit("refreshGame", null);
         }
