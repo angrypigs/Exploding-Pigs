@@ -7,6 +7,7 @@ import uuid from 'react-native-uuid';
 import { stylesMain } from "../../styles/style_main";
 import Card from "../components/card";
 import AnimatedCard from "../components/animatedCard";
+import { Button } from "react-native-web";
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,6 +46,7 @@ export default function GameScreen({ navigation }) {
     const { roomCode, nickname, name } = route.params;
 
     const [cards, setCards] = useState({});
+    const [cardsSelected, setCardsSelected] = useState(false);
     const [thrown, setThrown] = useState(null);
     const [deck, setDeck] = useState(null);
     const [anims, setAnims] = useState(null);
@@ -52,8 +54,10 @@ export default function GameScreen({ navigation }) {
     const [turnPointer, setTurnPointer] = useState(null);
 
     const cards_ref = useRef({});
+    const cardsSelected_ref = useRef([]);
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
+
 
     const CircleWithLabel = ({ x, y, size, color, label }) => {
         // Container for the circle and its label
@@ -181,6 +185,8 @@ export default function GameScreen({ navigation }) {
     useEffect(() => {
         socket.on("nextTurn", (data) => {
             setTurnPointer(data);
+            cardsSelected_ref.current = [];
+            setCardsSelected(false);
         });
     }, [socket]);
 
@@ -188,9 +194,20 @@ export default function GameScreen({ navigation }) {
         socket.emit("takeCard", roomCode);
     }
 
-    const handleThrowCard = (cardId) => {
-        socket.emit("throwCard", roomCode, cardId);
-        console.log(`throw ${cardId}`);
+    const handleSelectCard = (index) => {
+        if (cardsSelected_ref.current.includes(index)) {
+            cardsSelected_ref.current = cardsSelected_ref.current.filter((i) => i != index);
+            console.log("usuwany");
+        } else {
+            cardsSelected_ref.current.push(index);
+            console.log("dodawany");
+        }
+        console.log(`selected ${cardsSelected_ref.current}`);
+        setCardsSelected(cardsSelected_ref.current.length!==0);
+;    }
+
+    const handleThrowCard = () => {
+        socket.emit("throwCard", roomCode, cardsSelected_ref.current);
     }
 
     const removeAnim = (id) => {
@@ -227,12 +244,19 @@ export default function GameScreen({ navigation }) {
                 )}
             </View>
 
-            {cards && Object.entries(cards).map(([p, arr], j) =>
+            {(cards.length !== 0) && Object.entries(cards).map(([p, arr], j) =>
                 arr.map((c, i) => (
-                    <Card key={`${p}-${i}`} type={c} onPress={() => handleThrowCard(c)}
+                    <Card key={`${p}-${i}`} type={c} onPress={() => handleSelectCard(i)}
                         coords={[coords.card.x(i), coords.card.y(j)]} />
+                    //TU DAC ANiMACJE
                 ))
             )}
+
+            {cardsSelected &&
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+
+            }
+
             {thrown &&
                 <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} />}
             {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} />}
