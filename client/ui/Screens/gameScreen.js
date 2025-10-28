@@ -1,18 +1,19 @@
-import {SocketContext} from "../../contexts/socketContext";
-import React, {useState, useContext, useEffect, useRef} from "react";
-import {View, Text, Dimensions, StyleSheet, ImageBackground} from "react-native";
-import {useRoute} from "@react-navigation/native";
+import { SocketContext } from "../../contexts/socketContext";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import { View, Text, Dimensions, StyleSheet, ImageBackground } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import uuid from 'react-native-uuid';
 
-import {stylesMain} from "../../styles/style_main";
+import { stylesMain } from "../../styles/style_main";
 import Card from "../components/card";
 import AnimatedCard from "../components/animatedCard";
+import { Button } from "react-native-web";
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const coords = {
-    thrown: {x: width / 2 + 100, y: height - 100},
-    deck: {x: width / 2, y: height - 100},
+    thrown: { x: width / 2 + 100, y: height - 100 },
+    deck: { x: width / 2, y: height - 100 },
     card: {
         x: (c) => width / 2 - 200 + c * 50,
         y: (p) => 200 * (p + 1)
@@ -21,9 +22,9 @@ const coords = {
 
 function coordsAnimHandler(target) {
     if (target === "thrown" ||
-        target === "deck") return {...coords[target]};
+        target === "deck") return { ...coords[target] };
     let points = target.split(":").map(Number);
-    return {x: coords.card.x(0), y: coords.card.y(points[0])}
+    return { x: coords.card.x(0), y: coords.card.y(points[0]) }
 }
 
 const Circle = ({ x, y, size, color }) => {
@@ -39,12 +40,13 @@ const Circle = ({ x, y, size, color }) => {
     return <View style={circleStyle} />;
 };
 
-export default function GameScreen({navigation}) {
+export default function GameScreen({ navigation }) {
     const socket = useContext(SocketContext);
     const route = useRoute();
-    const {roomCode, nickname, name} = route.params;
+    const { roomCode, nickname, name } = route.params;
 
     const [cards, setCards] = useState({});
+    const [cardsSelected, setCardsSelected] = useState(false);
     const [thrown, setThrown] = useState(null);
     const [deck, setDeck] = useState(null);
     const [anims, setAnims] = useState(null);
@@ -52,8 +54,10 @@ export default function GameScreen({navigation}) {
     const [turnPointer, setTurnPointer] = useState(null);
 
     const cards_ref = useRef({});
+    const cardsSelected_ref = useRef([]);
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
+
 
     const CircleWithLabel = ({ x, y, size, color, label }) => {
         // Container for the circle and its label
@@ -170,7 +174,7 @@ export default function GameScreen({navigation}) {
                 }
                 setAnims(prev => {
                     if (!prev) return tempAnims;
-                    return {...prev, ...tempAnims};
+                    return { ...prev, ...tempAnims };
                 });
                 setAnimTrigger(prev => !prev);
             }
@@ -181,6 +185,8 @@ export default function GameScreen({navigation}) {
     useEffect(() => {
         socket.on("nextTurn", (data) => {
             setTurnPointer(data);
+            cardsSelected_ref.current = [];
+            setCardsSelected(false);
         });
     }, [socket]);
 
@@ -188,9 +194,25 @@ export default function GameScreen({navigation}) {
         socket.emit("takeCard", roomCode);
     }
 
+    const handleSelectCard = (index) => {
+        if (cardsSelected_ref.current.includes(index)) {
+            cardsSelected_ref.current = cardsSelected_ref.current.filter((i) => i != index);
+            console.log("usuwany");
+        } else {
+            cardsSelected_ref.current.push(index);
+            console.log("dodawany");
+        }
+        console.log(`selected ${cardsSelected_ref.current}`);
+        setCardsSelected(cardsSelected_ref.current.length!==0);
+;    }
+
+    const handleThrowCard = () => {
+        socket.emit("throwCard", roomCode, cardsSelected_ref.current);
+    }
+
     const removeAnim = (id) => {
         setAnims(prev => {
-            const next = {...prev};
+            const next = { ...prev };
             delete next[id];
             if (Object.keys(next).length === 0) {
                 setAnimTrigger(prev => !prev);
@@ -222,15 +244,22 @@ export default function GameScreen({navigation}) {
                 )}
             </View>
 
-            {cards && Object.entries(cards).map(([p, arr], j) =>
+            {(cards.length !== 0) && Object.entries(cards).map(([p, arr], j) =>
                 arr.map((c, i) => (
-                    <Card key={`${p}-${i}`} type={c} onPress={() => console.log(c)}
-                          coords={[coords.card.x(i), coords.card.y(j)]}/>
+                    <Card key={`${p}-${i}`} type={c} onPress={() => handleSelectCard(i)}
+                        coords={[coords.card.x(i), coords.card.y(j)]} />
+                    //TU DAC ANiMACJE
                 ))
             )}
+
+            {cardsSelected &&
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+
+            }
+
             {thrown &&
-                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]}/>}
-            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]}/>}
+                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} />}
             {anims && Object.entries(anims).map(([uuid, animData]) => (
                 <AnimatedCard
                     key={uuid}
