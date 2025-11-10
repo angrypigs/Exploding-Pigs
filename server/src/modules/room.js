@@ -128,12 +128,46 @@ export class Room {
     }
 
     //NOTE: PLAYER ACTIONS
-    take_n_cards_top(player_id, n) {
 
+    is_player_turn(player_id) {
+        if (this.queue[this.queue_p][0] === player_id) {
+            return true;
+        }
+        return false;
+    }
+
+    //FIXME: MAKE ACTIONES EVERY WHERE WHERE THERE IS 0 WHERE AN ACTION IS SUPOSED TO BE
+
+    take_n_cards_top(player_id, n) {
+        if ((this.players.has(player_id)) && (this.deck.length >= n) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
+            this.turns -= n;
+            this.save_state();
+            this.negable = false;
+            for (let i = 0; i < n; i++) {
+                this.players.get(player_id).cards.push([this.deck.pop(), true]);
+            }
+            let action = [["move", "deck", `${this.get_queue_index(player_id)}`, "0"]]
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
     take_n_cards_bot(player_id, n) {
-
+        if ((this.players.has(player_id)) && (this.deck.length >= n) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
+            this.turns -= n;
+            this.save_state();
+            this.negable = false;
+            this.deck.reverse();
+            for (let i = 0; i < n; i++) {
+                this.players.get(player_id).cards.push([this.deck.pop(), true]);
+            }
+            this.deck.reverse();
+            let action = [["move", "deck", `${this.get_queue_index(player_id)}`, "0"]]
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
     see_n_cards_top(player_id, n) {
@@ -145,34 +179,62 @@ export class Room {
     }
 
     skip_n_turns(player_id, n) {
-
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
+            this.turns -= n;
+            this.save_state();
+            this.negable = true;
+            let action = 0;
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
-    shuffle_deck(room) {
-
+    shuffle_deck(player_id) {
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.negable = true;
+            shuffleArray(this.deck);
+            let action = 0;
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
-    inverse_queue(room) {
-
+    inverse_queue(player_id) {
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.negable = true;
+            this.queue_dir = !this.queue_dir;
+            let action = 0;
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
     attack_n_times(player_id, n, target_id) {
 
     }
 
-    take_card(id) {
-        if (this.deck.length &&
-            this.players.has(id) &&
-            this.queue[this.queue_p][0] === id &&
-            this.turns > 0) {
-            this.turns -= 1;
-            this.save_state();
-            this.negable = false;
-            this.players.get(id).cards.push([this.deck.pop(), true]);
-            let action = [["move", "deck", `${this.get_queue_index(id)}`, "0"]]
-            this.save_state_action(action);
-            return action;
-        }
-        return null;
+    all_bombs_top(player_id) {
+        //TODO: this
+    }
+
+    all_bombs_bot(player_id) {
+        //TODO: this
+    }
+
+    piss_player(player_id) {
+
+    }
+
+    take_random_from_player(player_id) {
+
+    }
+
+    nonono(player_id) {
+
     }
 }

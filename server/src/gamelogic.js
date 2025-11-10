@@ -28,208 +28,244 @@ export const VALID_OBJ =
 export function valid_3(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "3")) {
         //skip 1
-
-        return true;
+        return [room.skip_n_turns(player_id, 1)];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_4(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "4")) {
         //skip all
-        return true;
+        return [room.skip_n_turns(player_id, room.turns)];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_5(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "5")) {
         //skip 1 + inverse
-        return true;
+        return [room.skip_n_turns(player_id, 1), room.inverse_queue(player_id)];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_6(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "6")) {
         //atack next
-        return true;
+        //TODO: finish that later
+        return [];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_7(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "7")) {
         //atack precise
-        return true;
+        //TODO: finish that later
+        return [];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_8(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "8")) {
         //shuffle
-        return true;
+        return [room.shuffle_deck(player_id)];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_9_3(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "9_3")) {
         //see 3 next
-        return true;
+        //TODO: finish that later
+        return [];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_9_4(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "9_4")) {
         //see 4 next
-        return true;
+        //TODO: finish that later
+        return [];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 export function valid_9_5(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "9_5")) {
         //see 5 next
-        return true;
+        //TODO: finish that later
+        return [];
     }
     else {
-        return false;
+        return null;
     }
 }
 
 
-// export function valid_10_3(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_3") {
-//         //mix 3 next
-//     }
-//     else {
+export function valid_10_3(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_3")) {
+        //mix 3 next
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-// }
+export function valid_10_4(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_4")) {
+        //mix 4 next
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-// export function valid_10_4(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_4") {
-//         //mix 4 next
-//     }
-//     else {
+export function valid_10_5(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_5")) {
+        //mix 5 next
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-// }
+export function valid_11(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "11")) {
+        //players give a chosen card back to deck
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-// export function valid_10_5(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "10_5") {
-//         //mix 5 next
-//     }
-//     else {
+export function valid_12(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "12")) {
+        //piss
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-// }
+export function valid_13(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "13")) {
+        //nonono
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-// export function valid_14_1(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === ) {
+export function valid_14_1(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 2) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "14_1")) {
+        //player give u random card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-//     else {
+export function valid_14_2(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 2) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "14_2")) {
+        //player give u random card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-// }
+export function valid_14_3(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 2) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "14_3")) {
+        //player give u random card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
+export function valid_14_4(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 2) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "14_4")) {
+        //player give u random card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-// export function valid_14_2(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === ) {
+export function valid_14_5(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 2) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "14_5")) {
+        //player give u random card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-//     else {
+export function valid_16(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "16")) {
+        //player give u chosen card
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-//     }
-// }
+export function valid_17(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "17")) {
+        //all bombs top + suffle rest
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
-// export function valid_14_3(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === ) {
-
-//     }
-//     else {
-
-//     }
-// }
-// export function valid_14_4(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === ) {
-
-//     }
-//     else {
-
-//     }
-// }
-
-// export function valid_14_5(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === ) {
-
-//     }
-//     else {
-
-//     }
-// }
-
-// export function valid_15(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "15") {
-
-//     }
-//     else {
-
-//     }
-// }
-
-// export function valid_16(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "16") {
-
-//     }
-//     else {
-
-//     }
-// }
-
-// export function valid_17(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "17") {
-
-//     }
-//     else {
-
-//     }
-// }
-
-// export function valid_18(room, player_id, indexesOfSelectedCards) {
-//     if (indexesOfSelectedCards.length === 1 ) && ( room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "18") {
-
-//     }
-//     else {
-
-//     }
-// }
+export function valid_18(room, player_id, indexesOfSelectedCards) {
+    if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "18")) {
+        //all bombs bot + suffle rest
+        return [];
+    }
+    else {
+        return null;
+    }
+}
 
 export function valid_19(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "19")) {
         //take from bottom
-        return true;
+        return [room.take_n_cards_bot(player_id, 1)];
     }
     else {
-        return false;
+        return null;
     }
 }

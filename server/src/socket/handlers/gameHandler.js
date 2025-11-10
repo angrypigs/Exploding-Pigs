@@ -22,7 +22,7 @@ export default function gameHandler(io, socket, rooms) {
     socket.on("takeCard", (code) => {
         const room = rooms.get(code);
         if (room) {
-            const action = room.take_card(socket.id);
+            const action = room.take_n_cards_top(socket.id, 1);
             console.log(`Action from ${socket.id}: ${action}`)
             if (action) {
                 for (const key of room.players.keys()) {
@@ -31,7 +31,7 @@ export default function gameHandler(io, socket, rooms) {
                     io.to(key).emit("refreshGame", action, res["cards"], res["deck"], res["thrown"]);
                 }
             } else {
-                socket.emit("refreshGame", null);
+                socket.emit("refreshGame", false);
             }
         } else {
             socket.emit("refreshGame", null);
@@ -44,37 +44,40 @@ export default function gameHandler(io, socket, rooms) {
         if (room) {
             console.log(`${code} + ${cardsSelected}`);
 
-<<<<<<< Updated upstream
-            // verify cards
-            const playerCards = room.players.get(socket.id).cards;
-            let minIndex = Math.min.apply(null, cardsSelected);
-            let maxIndex = Math.max.apply(null, cardsSelected);
+            if (room.is_player_turn(socket.id)) {
 
-            if (minIndex >= 0 && maxIndex <= playerCards.length) {
-                console.log("correct throw");
-                // match the corect action
-                for (index in cardsSelected) {
-                    //stworzyc akcje na podstawie karty na indeksie
 
+                let actions = [];
+                for (const v of VALID_OBJ) {
+                    if ((actions = v(room, socket.id, cardsSelected))) {
+                        console.log("VALID THROW");
+                        break;
+                    }
                 }
 
+                if (actions) {
 
-                // send a return statement to delete cards on client side and put them on the pile
+                    const playerCards = room.players.get(socket.id).cards;
 
-                // flip the turn , skip the turn or take card from bottom
-            } else {
-                console.log("not correct throw");
-                //Eror
-            }
-=======
-            for (const v of VALID_OBJ) {
-                if (v(room, socket.id, cardsSelected) === true) {
-                    console.log("VALID THROW");
-                    break;
+                    for (const c of [...cardsSelected].sort((a, b) => b - a)) {
+                        playerCards.splice(c, 1);
+                    }
+
+                    for (const a of actions) {
+                        for (const key of room.players.keys()) {
+                            const res = room.serve_cards(key);
+                            // room.print_game()
+                            io.to(key).emit("refreshGame", a, res["cards"], res["deck"], res["thrown"]);
+                        }
+                    }
+                }
+                else {
+                    socket.emit("refreshGame", false);
                 }
             }
-
->>>>>>> Stashed changes
+            else {
+                socket.emit("refreshGame", false);
+            }
         } else {
             socket.emit("refreshGame", null);
         }

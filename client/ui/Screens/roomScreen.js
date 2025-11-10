@@ -7,11 +7,9 @@ import { stylesMain } from "../../styles/style_main";
 import { PlayerList } from "../components/player_list";
 import { Button } from "../components/button"
 
-
 export default function RoomScreen({ navigation }) {
     const socket = useContext(SocketContext);
     const route = useRoute();
-    //console.log(route.params, "route.params")
     const { roomCode, nickname, name } = route.params;
 
     const handlePlayerReady = () => {
