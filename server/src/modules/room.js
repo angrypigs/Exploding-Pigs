@@ -1,8 +1,10 @@
 import { rotateArray, shuffleArray, data } from "../utils.js";
 
+
 export class Room {
     constructor(max_players) {
         this.max_players = max_players;
+        this.used_deck = [];
         this.deck = [];
         this.thrown = null;
         this.players = new Map();
@@ -44,8 +46,9 @@ export class Room {
 
     save_state() {
         this.change_flag = false;
-        this.last_state = {cards: {}, 
-            thrown: this.thrown, 
+        this.last_state = {
+            cards: {},
+            thrown: this.thrown,
             deck: { ...this.deck }
         }
         for (const key of this.players.keys()) {
@@ -124,9 +127,42 @@ export class Room {
         return [this.queue_p, this.turns];
     }
 
+    //NOTE: PLAYER ACTIONS
+    take_n_cards_top(player_id, n) {
+
+    }
+
+    take_n_cards_bot(player_id, n) {
+
+    }
+
+    see_n_cards_top(player_id, n) {
+
+    }
+
+    mix_n_cards_top(player_id, n) {
+
+    }
+
+    skip_n_turns(player_id, n) {
+
+    }
+
+    shuffle_deck(room) {
+
+    }
+
+    inverse_queue(room) {
+
+    }
+
+    attack_n_times(player_id, n, target_id) {
+
+    }
+
     take_card(id) {
-        if (this.deck.length && 
-            this.players.has(id) && 
+        if (this.deck.length &&
+            this.players.has(id) &&
             this.queue[this.queue_p][0] === id &&
             this.turns > 0) {
             this.turns -= 1;

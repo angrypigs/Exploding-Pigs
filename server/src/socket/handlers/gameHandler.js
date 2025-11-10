@@ -1,4 +1,5 @@
 import { Room } from "../../modules/room.js";
+import { VALID_OBJ } from "../../gamelogic.js";
 
 export default function gameHandler(io, socket, rooms) {
     socket.on("nextTurn", (code) => {
@@ -30,18 +31,20 @@ export default function gameHandler(io, socket, rooms) {
                     io.to(key).emit("refreshGame", action, res["cards"], res["deck"], res["thrown"]);
                 }
             } else {
-                socket.emit("refreshGame", false);
+                socket.emit("refreshGame", null);
             }
         } else {
             socket.emit("refreshGame", null);
         }
     });
 
+    //FIXME: DO CHECKS FOR ERORRS ETC
     socket.on("throwCard", (code, cardsSelected) => {
         const room = rooms.get(code);
         if (room) {
             console.log(`${code} + ${cardsSelected}`);
 
+<<<<<<< Updated upstream
             // verify cards
             const playerCards = room.players.get(socket.id).cards;
             let minIndex = Math.min.apply(null, cardsSelected);
@@ -63,6 +66,15 @@ export default function gameHandler(io, socket, rooms) {
                 console.log("not correct throw");
                 //Eror
             }
+=======
+            for (const v of VALID_OBJ) {
+                if (v(room, socket.id, cardsSelected) === true) {
+                    console.log("VALID THROW");
+                    break;
+                }
+            }
+
+>>>>>>> Stashed changes
         } else {
             socket.emit("refreshGame", null);
         }
