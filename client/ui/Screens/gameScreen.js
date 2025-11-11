@@ -1,29 +1,30 @@
-import {SocketContext} from "../../contexts/socketContext";
-import React, {useState, useContext, useEffect, useRef} from "react";
-import {View, Text, Dimensions, StyleSheet, ImageBackground} from "react-native";
-import {useRoute} from "@react-navigation/native";
+import { SocketContext } from "../../contexts/socketContext";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import {View, Text, Dimensions, StyleSheet, ImageBackground, ScrollView, Pressable} from "react-native";
+import { useRoute } from "@react-navigation/native";
 import uuid from 'react-native-uuid';
 
-import {stylesMain} from "../../styles/style_main";
+import { stylesMain } from "../../styles/style_main";
 import Card from "../components/card";
 import AnimatedCard from "../components/animatedCard";
+import { Button } from "react-native-web";
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const coords = {
-    thrown: {x: width / 2 + 100, y: height - 100},
-    deck: {x: width / 2, y: height - 100},
+    thrown: { x: width / 2 + 100, y: height - 100 },
+    deck: { x: width / 2, y: height/2 },
     card: {
         x: (c) => width / 2 - 200 + c * 50,
-        y: (p) => 200 * (p + 1)
+        y: (p) => height-130 * (p + 1)
     }
 }
 
 function coordsAnimHandler(target) {
     if (target === "thrown" ||
-        target === "deck") return {...coords[target]};
+        target === "deck") return { ...coords[target] };
     let points = target.split(":").map(Number);
-    return {x: coords.card.x(0), y: coords.card.y(points[0])}
+    return { x: coords.card.x(0), y: coords.card.y(points[0]) }
 }
 
 const Circle = ({ x, y, size, color }) => {
@@ -39,12 +40,13 @@ const Circle = ({ x, y, size, color }) => {
     return <View style={circleStyle} />;
 };
 
-export default function GameScreen({navigation}) {
+export default function GameScreen({ navigation }) {
     const socket = useContext(SocketContext);
     const route = useRoute();
-    const {roomCode, nickname, name} = route.params;
+    const { roomCode, nickname, name } = route.params;
 
     const [cards, setCards] = useState({});
+    const [cardsSelected, setCardsSelected] = useState(false);
     const [thrown, setThrown] = useState(null);
     const [deck, setDeck] = useState(null);
     const [anims, setAnims] = useState(null);
@@ -52,8 +54,69 @@ export default function GameScreen({navigation}) {
     const [turnPointer, setTurnPointer] = useState(null);
 
     const cards_ref = useRef({});
+    const cardsSelected_ref = useRef([]);
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
+
+    const scrollRef = useRef(null); // Ref for the ScrollView
+    const scrollIntervalRef = useRef(null); // Ref for the setInterval
+    const scrollXRef = useRef(0); // Ref to track current scrollX (avoids stale state in intervals)
+    const contentWidthRef = useRef(0);
+    const [scrollState, setScrollState] = useState({
+        contentWidth: 0,
+        containerWidth: 0,
+        showLeft: false,
+        showRight: false,
+    });
+
+    const updateArrowState = (x) => {
+        setScrollState(prev => {
+            const { contentWidth, containerWidth } = prev;
+            const canScrollLeft = x > 0;
+            // -1 to account for rounding errors
+            const canScrollRight = x < (contentWidth - containerWidth) - 1;
+
+            return { ...prev, showLeft: canScrollLeft, showRight: canScrollRight };
+        });
+    };
+
+    const startScrolling = (direction) => {
+        // Clear any existing interval
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+
+        // Set a new interval to scroll repeatedly
+        scrollIntervalRef.current = setInterval(() => {
+            const SCROLL_STEP = 15; // How many pixels to scroll each step
+            let newX;
+
+            if (direction === 'left') {
+                newX = Math.max(0, scrollXRef.current - SCROLL_STEP);
+            } else {
+                newX = scrollXRef.current + SCROLL_STEP;
+            }
+
+            if (scrollRef.current) {
+                scrollRef.current.scrollTo({ x: newX, animated: false });
+            }
+        }, 50); // Adjust interval time (in ms) for speed
+    };
+
+    const stopScrolling = () => {
+        if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current);
+            scrollIntervalRef.current = null;
+        }
+    };
+
+    // Add cleanup effect for the interval
+    useEffect(() => {
+        return () => {
+            // Clear interval when component unmounts
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+            }
+        };
+    }, []);
 
     const CircleWithLabel = ({ x, y, size, color, label }) => {
         // Container for the circle and its label
@@ -170,7 +233,7 @@ export default function GameScreen({navigation}) {
                 }
                 setAnims(prev => {
                     if (!prev) return tempAnims;
-                    return {...prev, ...tempAnims};
+                    return { ...prev, ...tempAnims };
                 });
                 setAnimTrigger(prev => !prev);
             }
@@ -181,6 +244,8 @@ export default function GameScreen({navigation}) {
     useEffect(() => {
         socket.on("nextTurn", (data) => {
             setTurnPointer(data);
+            cardsSelected_ref.current = [];
+            setCardsSelected(false);
         });
     }, [socket]);
 
@@ -188,9 +253,25 @@ export default function GameScreen({navigation}) {
         socket.emit("takeCard", roomCode);
     }
 
+    const handleSelectCard = (index) => {
+        if (cardsSelected_ref.current.includes(index)) {
+            cardsSelected_ref.current = cardsSelected_ref.current.filter((i) => i != index);
+            console.log("usuwany");
+        } else {
+            cardsSelected_ref.current.push(index);
+            console.log("dodawany");
+        }
+        console.log(`selected ${cardsSelected_ref.current}`);
+        setCardsSelected(cardsSelected_ref.current.length!==0);
+;    }
+
+    const handleThrowCard = () => {
+        socket.emit("throwCard", roomCode, cardsSelected_ref.current);
+    }
+
     const removeAnim = (id) => {
         setAnims(prev => {
-            const next = {...prev};
+            const next = { ...prev };
             delete next[id];
             if (Object.keys(next).length === 0) {
                 setAnimTrigger(prev => !prev);
@@ -222,15 +303,88 @@ export default function GameScreen({navigation}) {
                 )}
             </View>
 
-            {cards && Object.entries(cards).map(([p, arr], j) =>
-                arr.map((c, i) => (
-                    <Card key={`${p}-${i}`} type={c} onPress={() => console.log(c)}
-                          coords={[coords.card.x(i), coords.card.y(j)]}/>
-                ))
-            )}
+            <View style={styles.myHandContainer}>
+
+                {/* --- ADD LEFT ARROW --- */}
+                {scrollState.showLeft && (
+                    <Pressable
+                        style={[styles.arrowContainer, styles.arrowLeft]}
+                        onPressIn={() => startScrolling('left')}
+                        onPressOut={stopScrolling}
+                        onHoverIn={() => startScrolling('left')} // For react-native-web
+                        onHoverOut={stopScrolling}              // For react-native-web
+                    >
+                        <Text style={styles.arrowText}>{"<"}</Text>
+                    </Pressable>
+                )}
+
+                <ScrollView
+                    // --- ADD/UPDATE THESE PROPS ---
+                    ref={scrollRef}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.myHandContent}
+                    scrollEventThrottle={16} // Essential for smooth onScroll updates
+                    onScroll={(event) => {
+                        const x = event.nativeEvent.contentOffset.x;
+                        scrollXRef.current = x; // Update ref for interval
+                        updateArrowState(x);    // Update state for arrows
+                    }}
+                    onContentSizeChange={(newWidth, height) => {
+                        const oldWidth = contentWidthRef.current;
+
+                        if (newWidth > oldWidth && scrollRef.current) {
+                            stopScrolling();
+                            scrollRef.current.scrollToEnd({ animated: true });
+                        }
+
+                        contentWidthRef.current = newWidth;
+
+                        setScrollState(prev => {
+                            const canScrollRight = newWidth > prev.containerWidth;
+                            return {
+                                ...prev,
+                                contentWidth: newWidth,
+                                showRight: canScrollRight,
+                            };
+                        });
+                    }}
+                    onLayout={(event) => {
+                        setScrollState(prev => ({ ...prev, containerWidth: event.nativeEvent.layout.width }));
+                    }}
+                >
+                    {(cards.length !== 0) && Object.entries(cards).map(([p, arr], j) =>
+                        arr.map((c, i) => (
+                            <Card key={`${p}-${i}`} type={c} onPress={() => handleSelectCard(i)}
+                                  coords={[coords.card.x(i), coords.card.y(j)]} zoom={true} />
+                            //TU DAC ANiMACJE
+                        ))
+                    )}
+                </ScrollView>
+
+                {/* --- ADD RIGHT ARROW --- */}
+                {scrollState.showRight && (
+                    <Pressable
+                        style={[styles.arrowContainer, styles.arrowRight]}
+                        onPressIn={() => startScrolling('right')}
+                        onPressOut={stopScrolling}
+                        onHoverIn={() => startScrolling('right')} // For react-native-web
+                        onHoverOut={stopScrolling}              // For react-native-web
+                    >
+                        <Text style={styles.arrowText}>{">"}</Text>
+                    </Pressable>
+                )}
+
+            </View>
+
+            {cardsSelected &&
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+
+            }
+
             {thrown &&
-                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]}/>}
-            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]}/>}
+                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} style={{ zIndex: 50 }} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} zoom={false}/>}
             {anims && Object.entries(anims).map(([uuid, animData]) => (
                 <AnimatedCard
                     key={uuid}
@@ -275,5 +429,54 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
+    },
+    myHandContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        height: 150,
+        // Add flexDirection to allow arrows to be on the side
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    myHandContent: {
+        // ... (keep your existing myHandContent styles)
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        height:1000
+    },
+    handCard: {
+        width: 80,
+        height: 120,
+        marginHorizontal: 4,
+    },
+
+    // --- ADD THESE NEW STYLES ---
+    arrowContainer: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        width: 40, // Width of the arrow touch area
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)', // Semi-transparent background
+        zIndex: 10, // Make sure it's on top of cards
+    },
+    arrowLeft: {
+        left: 0,
+        borderTopRightRadius: 10,
+        borderBottomRightRadius: 10,
+    },
+    arrowRight: {
+        right: 0,
+        borderTopLeftRadius: 10,
+        borderBottomLeftRadius: 10,
+    },
+    arrowText: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
     }
 })
