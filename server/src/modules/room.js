@@ -106,7 +106,7 @@ export class Room {
             for (const c of this.players.get(socketId).cards) {
                 hand.push((!c[1] || socketId === id) ? c[0] : "0");
             }
-            const playerIndex = this.queue.findIndex(s => s[0] === socketId);
+            const playerIndex = rotatedQueue.findIndex(s => s[0] === socketId);
             cards[playerIndex] = hand;
         }
         res["cards"] = cards;

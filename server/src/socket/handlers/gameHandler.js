@@ -1,4 +1,4 @@
-import {Room} from "../../modules/room.js";
+import { Room } from "../../modules/room.js";
 
 export default function gameHandler(io, socket, rooms) {
     socket.on("nextTurn", (code) => {
@@ -36,4 +36,13 @@ export default function gameHandler(io, socket, rooms) {
             socket.emit("refreshGame", null);
         }
     });
+
+    socket.on("throwCard", (code, cardsSelected) => {
+        const room = rooms.get(code);
+        if (room) {
+            console.log(`${code} + ${cardsSelected}`);
+        } else {
+            socket.emit("refreshGame", null);
+        }
+    })
 }
