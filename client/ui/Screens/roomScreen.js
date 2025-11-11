@@ -11,7 +11,6 @@ import {Button} from "../components/button"
 export default function RoomScreen({ navigation }) {
     const socket = useContext(SocketContext);
     const route = useRoute();
-    console.log(route.params, "route.params")
     const {roomCode, nickname, name} = route.params;
 
     const handlePlayerReady = () => {
