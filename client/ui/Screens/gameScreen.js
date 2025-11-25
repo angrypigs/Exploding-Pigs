@@ -69,6 +69,10 @@ export default function GameScreen({ navigation }) {
         showRight: false,
     });
 
+    // Add this inside GameScreen
+    const [isHandHovered, setIsHandHovered] = useState(false);
+    const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
+
     const updateArrowState = (x) => {
         setScrollState(prev => {
             const { contentWidth, containerWidth } = prev;
@@ -321,7 +325,7 @@ export default function GameScreen({ navigation }) {
                 />
             ))}
 
-            <View style={styles.myHandContainer}>
+            <View style={[styles.myHandContainer]}>
 
                 {/* --- ADD LEFT ARROW --- */}
                 {scrollState.showLeft && (
@@ -337,27 +341,26 @@ export default function GameScreen({ navigation }) {
                 )}
 
                 <ScrollView
-                    // --- ADD/UPDATE THESE PROPS ---
                     ref={scrollRef}
                     horizontal={true}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.myHandContent}
-                    scrollEventThrottle={16} // Essential for smooth onScroll updates
+                    // ensure overflow is visible so the card doesn't get cut off when it moves up
+                    contentContainerStyle={[styles.myHandContent, isHandHovered && { height: 1000 }]}
+                    style={{ overflow: 'visible' }}
+                    scrollEventThrottle={16}
                     onScroll={(event) => {
                         const x = event.nativeEvent.contentOffset.x;
-                        scrollXRef.current = x; // Update ref for interval
-                        updateArrowState(x);    // Update state for arrows
+                        scrollXRef.current = x;
+                        updateArrowState(x);
                     }}
                     onContentSizeChange={(newWidth, height) => {
+                        // ... (your existing logic)
                         const oldWidth = contentWidthRef.current;
-
                         if (newWidth > oldWidth && scrollRef.current) {
                             stopScrolling();
                             scrollRef.current.scrollToEnd({ animated: true });
                         }
-
                         contentWidthRef.current = newWidth;
-
                         setScrollState(prev => {
                             const canScrollRight = newWidth > prev.containerWidth;
                             return {
@@ -371,16 +374,51 @@ export default function GameScreen({ navigation }) {
                         setScrollState(prev => ({ ...prev, containerWidth: event.nativeEvent.layout.width }));
                     }}
                 >
-                    {cards?.[0]?.map((c, i) => (
-                        <Card
-                            key={`0-${i}`}
-                            type={c}
-                            onPress={() => handleSelectCard(i)}
-                            // We use y(0) because we are specifically looking at the 0th row
-                            coords={[coords.card.x(i), coords.card.y(0)]}
-                            zoom={true}
-                        />
-                    ))}
+                    {cards?.[0]?.map((c, i) => {
+                        const isThisCardHovered = hoveredCardIndex === i;
+
+                        return (
+                            <Pressable
+                                key={`0-${i}`}
+                                // We keep these to handle the container height,
+                                // but we WON'T use them for the individual card movement anymore.
+                                onHoverIn={() => {
+                                    setIsHandHovered(true);
+                                    setHoveredCardIndex(i);
+                                }}
+                                onHoverOut={() => {
+                                    setIsHandHovered(false);
+                                    setHoveredCardIndex(null);
+                                }}
+                                // *** SOLUTION: Use a function for style to get the 'hovered' state directly ***
+                                style={({ hovered }) => [
+                                    {
+                                        // Center content
+                                        justifyContent: 'center',
+                                        height: '100%',
+
+                                        // WEB ONLY: Smooth animation for transform AND margin
+                                        transition: 'all 0.3s ease-out',
+
+                                        // Dynamic styles based on the 'hovered' argument passed by Pressable
+                                        marginHorizontal: hovered ? 30 : 0,
+                                        zIndex: hovered ? 100 : 1,
+                                        transform: [
+                                            { translateY: hovered ? -100 : 0 }
+                                        ]
+                                    }
+                                ]}
+                            >
+                                <Card
+                                    key={`0-${i}`}
+                                    type={c}
+                                    onPress={() => handleSelectCard(i)}
+                                    coords={[coords.card.x(i), coords.card.y(0)]}
+                                    zoom={true}
+                                />
+                            </Pressable>
+                        )
+                    })}
                 </ScrollView>
 
                 {/* --- ADD RIGHT ARROW --- */}
@@ -452,7 +490,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 10,
-        height:1000
+        height:150
     },
     handCard: {
         width: 80,
