@@ -266,11 +266,13 @@ export default function GameScreen({ navigation }) {
             console.log("dodawany");
         }
         console.log(`selected ${cardsSelected_ref.current}`);
-        setCardsSelected(cardsSelected_ref.current.length!==0);
-;    }
+        setCardsSelected(cardsSelected_ref.current.length !== 0);
+        ;
+    }
 
     const handleThrowCard = () => {
         socket.emit("throwCard", roomCode, cardsSelected_ref.current);
+        cardsSelected_ref.current = [];
     }
 
     const removeAnim = (id) => {

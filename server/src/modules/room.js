@@ -1,8 +1,10 @@
 import { rotateArray, shuffleArray, data } from "../utils.js";
 
+
 export class Room {
     constructor(max_players) {
         this.max_players = max_players;
+        this.used_deck = [];
         this.deck = [];
         this.thrown = null;
         this.players = new Map();
@@ -44,8 +46,9 @@ export class Room {
 
     save_state() {
         this.change_flag = false;
-        this.last_state = {cards: {}, 
-            thrown: this.thrown, 
+        this.last_state = {
+            cards: {},
+            thrown: this.thrown,
             deck: { ...this.deck }
         }
         for (const key of this.players.keys()) {
@@ -124,19 +127,140 @@ export class Room {
         return [this.queue_p, this.turns];
     }
 
-    take_card(id) {
-        if (this.deck.length && 
-            this.players.has(id) && 
-            this.queue[this.queue_p][0] === id &&
-            this.turns > 0) {
-            this.turns -= 1;
+    //NOTE: PLAYER ACTIONS
+
+    is_player_turn(player_id) {
+        if (this.queue[this.queue_p][0] === player_id) {
+            return true;
+        }
+        return false;
+    }
+
+    //FIXME: MAKE ACTIONES EVERY WHERE WHERE THERE IS 0 WHERE AN ACTION IS SUPOSED TO BE
+
+    take_card_top(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.deck.length > 0) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.turns--;
             this.save_state();
             this.negable = false;
-            this.players.get(id).cards.push([this.deck.pop(), true]);
-            let action = [["move", "deck", `${this.get_queue_index(id)}`, "0"]]
+            this.players.get(player_id).cards.push([this.deck.pop(), true]);
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }
         return null;
+    }
+
+    take_card_bot(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.deck.length > 0) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.turns--;
+            this.save_state();
+            this.negable = false;
+            this.deck.reverse();
+            this.players.get(player_id).cards.push([this.deck.pop(), true]);
+            this.deck.reverse();
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    see_n_cards_top(player_id, n) {
+
+    }
+
+    mix_n_cards_top(player_id, n) {
+
+    }
+
+    skip_turn(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.turns--;
+            this.negable = true;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    skip_all_turns(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.turns = 0;
+            this.negable = true;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    shuffle_deck(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.negable = true;
+            shuffleArray(this.deck);
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    inverse_queue(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.negable = true;
+            this.queue_dir = !this.queue_dir;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    attack_n_times(player_id, n, target_id) {
+
+    }
+
+    all_bombs_top(player_id) {
+        //TODO: this
+    }
+
+    all_bombs_bot(player_id) {
+        //TODO: this
+    }
+
+    piss_player(player_id) {
+
+    }
+
+    take_random_from_player(player_id) {
+
+    }
+
+    nonono(player_id) {
+
     }
 }

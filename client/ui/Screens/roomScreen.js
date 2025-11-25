@@ -1,17 +1,16 @@
-import {SocketContext} from "../../contexts/socketContext";
-import React, {useState, useContext, useEffect} from "react";
-import {View, Text} from "react-native";
-import {useRoute} from "@react-navigation/native";
+import { SocketContext } from "../../contexts/socketContext";
+import React, { useState, useContext, useEffect } from "react";
+import { View, Text } from "react-native";
+import { useRoute } from "@react-navigation/native";
 
-import {stylesMain} from "../../styles/style_main";
-import {PlayerList} from "../components/player_list";
-import {Button} from "../components/button"
-
+import { stylesMain } from "../../styles/style_main";
+import { PlayerList } from "../components/player_list";
+import { Button } from "../components/button"
 
 export default function RoomScreen({ navigation }) {
     const socket = useContext(SocketContext);
     const route = useRoute();
-    const {roomCode, nickname, name} = route.params;
+    const { roomCode, nickname, name } = route.params;
 
     const handlePlayerReady = () => {
         socket.emit("playerReady", roomCode);
@@ -28,7 +27,7 @@ export default function RoomScreen({ navigation }) {
 
     useEffect(() => {
         socket.on("roomReady", () => {
-            navigation.replace("Game", {roomCode: roomCode, nickname, name});
+            navigation.replace("Game", { roomCode: roomCode, nickname, name });
         });
         return () => socket.off("roomReady");
     }, [socket]);
@@ -43,8 +42,8 @@ export default function RoomScreen({ navigation }) {
                 <Text style={stylesMain.text}>Nickname: {nickname}</Text>
                 {name ? <Text style={stylesMain.text}>Name: {name}</Text> : null}
             </View>
-            <PlayerList players={players} setPlayers={setPlayers}/>
-            <Button title="Ready" onPress={handlePlayerReady}/>
+            <PlayerList players={players} setPlayers={setPlayers} />
+            <Button title="Ready" onPress={handlePlayerReady} />
         </View>
     );
 }
