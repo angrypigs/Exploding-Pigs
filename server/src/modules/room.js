@@ -138,32 +138,34 @@ export class Room {
 
     //FIXME: MAKE ACTIONES EVERY WHERE WHERE THERE IS 0 WHERE AN ACTION IS SUPOSED TO BE
 
-    take_n_cards_top(player_id, n) {
-        if ((this.players.has(player_id)) && (this.deck.length >= n) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
-            this.turns -= n;
+    take_card_top(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.deck.length > 0) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.turns--;
             this.save_state();
             this.negable = false;
-            for (let i = 0; i < n; i++) {
-                this.players.get(player_id).cards.push([this.deck.pop(), true]);
-            }
-            let action = [["move", "deck", `${this.get_queue_index(player_id)}`, "0"]]
+            this.players.get(player_id).cards.push([this.deck.pop(), true]);
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }
         return null;
     }
 
-    take_n_cards_bot(player_id, n) {
-        if ((this.players.has(player_id)) && (this.deck.length >= n) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
-            this.turns -= n;
+    take_card_bot(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.deck.length > 0) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.turns--;
             this.save_state();
             this.negable = false;
             this.deck.reverse();
-            for (let i = 0; i < n; i++) {
-                this.players.get(player_id).cards.push([this.deck.pop(), true]);
-            }
+            this.players.get(player_id).cards.push([this.deck.pop(), true]);
             this.deck.reverse();
-            let action = [["move", "deck", `${this.get_queue_index(player_id)}`, "0"]]
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }
@@ -178,12 +180,30 @@ export class Room {
 
     }
 
-    skip_n_turns(player_id, n) {
-        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns - n >= 0)) {
-            this.turns -= n;
+    skip_turn(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
             this.save_state();
+            this.turns--;
             this.negable = true;
-            let action = 0;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
+
+    skip_all_turns(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
+        if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
+            this.save_state();
+            this.turns = 0;
+            this.negable = true;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }
@@ -191,11 +211,14 @@ export class Room {
     }
 
     shuffle_deck(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
         if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
             this.save_state();
             this.negable = true;
             shuffleArray(this.deck);
-            let action = 0;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }
@@ -203,11 +226,14 @@ export class Room {
     }
 
     inverse_queue(player_id) {
+        console.log((this.players.has(player_id)));
+        console.log(this.queue[this.queue_p][0] === player_id);
+        console.log(this.turns > 0);
         if ((this.players.has(player_id)) && (this.queue[this.queue_p][0] === player_id) && (this.turns > 0)) {
             this.save_state();
             this.negable = true;
             this.queue_dir = !this.queue_dir;
-            let action = 0;
+            let action = ["move", "deck", `${this.get_queue_index(player_id)}`, "0"];
             this.save_state_action(action);
             return action;
         }

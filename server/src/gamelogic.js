@@ -28,30 +28,30 @@ export const VALID_OBJ =
 export function valid_3(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "3")) {
         //skip 1
-        return [room.skip_n_turns(player_id, 1)];
+        return [room.skip_turn(player_id)];
     }
     else {
-        return null;
+        return [];
     }
 }
 
 export function valid_4(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "4")) {
         //skip all
-        return [room.skip_n_turns(player_id, room.turns)];
+        return [room.skip_all_turns(player_id)];
     }
     else {
-        return null;
+        return [];
     }
 }
 
 export function valid_5(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "5")) {
         //skip 1 + inverse
-        return [room.skip_n_turns(player_id, 1), room.inverse_queue(player_id)];
+        return [room.inverse_queue(player_id), room.skip_turn(player_id)];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -62,7 +62,7 @@ export function valid_6(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -73,7 +73,7 @@ export function valid_7(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -83,7 +83,7 @@ export function valid_8(room, player_id, indexesOfSelectedCards) {
         return [room.shuffle_deck(player_id)];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -94,7 +94,7 @@ export function valid_9_3(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -105,7 +105,7 @@ export function valid_9_4(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -116,7 +116,7 @@ export function valid_9_5(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -127,7 +127,7 @@ export function valid_10_3(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -137,7 +137,7 @@ export function valid_10_4(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -147,7 +147,7 @@ export function valid_10_5(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -157,7 +157,7 @@ export function valid_11(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -167,7 +167,7 @@ export function valid_12(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -177,7 +177,7 @@ export function valid_13(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -187,7 +187,7 @@ export function valid_14_1(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -197,7 +197,7 @@ export function valid_14_2(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -207,7 +207,7 @@ export function valid_14_3(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 export function valid_14_4(room, player_id, indexesOfSelectedCards) {
@@ -216,7 +216,7 @@ export function valid_14_4(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -226,7 +226,7 @@ export function valid_14_5(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -236,7 +236,7 @@ export function valid_16(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -246,7 +246,7 @@ export function valid_17(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
@@ -256,16 +256,16 @@ export function valid_18(room, player_id, indexesOfSelectedCards) {
         return [];
     }
     else {
-        return null;
+        return [];
     }
 }
 
 export function valid_19(room, player_id, indexesOfSelectedCards) {
     if ((indexesOfSelectedCards.length === 1) && (room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === "19")) {
         //take from bottom
-        return [room.take_n_cards_bot(player_id, 1)];
+        return [room.take_card_bot(player_id)];
     }
     else {
-        return null;
+        return [];
     }
 }
