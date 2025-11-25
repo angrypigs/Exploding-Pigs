@@ -283,7 +283,7 @@ export default function GameScreen({ navigation }) {
     }
 
 
-
+    console.log(cards)
     return (
         <View style={styles.container}>
             <ImageBackground
@@ -302,6 +302,24 @@ export default function GameScreen({ navigation }) {
                     </Text>
                 )}
             </View>
+
+            {thrown &&
+                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} style={{ zIndex: 50 }} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} zoom={false}/>}
+            {cardsSelected &&
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+            }
+
+            {circlesToDraw.map(circle => (
+                <CircleWithLabel
+                    key={circle.id}
+                    x={circle.x}
+                    y={circle.y}
+                    size={circle.size}
+                    color={circle.color}
+                    label={circle.label} // Pass the label prop
+                />
+            ))}
 
             <View style={styles.myHandContainer}>
 
@@ -353,13 +371,16 @@ export default function GameScreen({ navigation }) {
                         setScrollState(prev => ({ ...prev, containerWidth: event.nativeEvent.layout.width }));
                     }}
                 >
-                    {(cards.length !== 0) && Object.entries(cards).map(([p, arr], j) =>
-                        arr.map((c, i) => (
-                            <Card key={`${p}-${i}`} type={c} onPress={() => handleSelectCard(i)}
-                                  coords={[coords.card.x(i), coords.card.y(j)]} zoom={true} />
-                            //TU DAC ANiMACJE
-                        ))
-                    )}
+                    {cards?.[0]?.map((c, i) => (
+                        <Card
+                            key={`0-${i}`}
+                            type={c}
+                            onPress={() => handleSelectCard(i)}
+                            // We use y(0) because we are specifically looking at the 0th row
+                            coords={[coords.card.x(i), coords.card.y(0)]}
+                            zoom={true}
+                        />
+                    ))}
                 </ScrollView>
 
                 {/* --- ADD RIGHT ARROW --- */}
@@ -377,14 +398,9 @@ export default function GameScreen({ navigation }) {
 
             </View>
 
-            {cardsSelected &&
-                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
 
-            }
 
-            {thrown &&
-                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} style={{ zIndex: 50 }} />}
-            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} zoom={false}/>}
+
             {anims && Object.entries(anims).map(([uuid, animData]) => (
                 <AnimatedCard
                     key={uuid}
@@ -393,16 +409,7 @@ export default function GameScreen({ navigation }) {
                 />
             ))}
 
-            {circlesToDraw.map(circle => (
-                <CircleWithLabel
-                    key={circle.id}
-                    x={circle.x}
-                    y={circle.y}
-                    size={circle.size}
-                    color={circle.color}
-                    label={circle.label} // Pass the label prop
-                />
-            ))}
+
         </View>
     );
 }
