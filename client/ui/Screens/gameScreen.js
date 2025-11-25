@@ -1,6 +1,6 @@
 import { SocketContext } from "../../contexts/socketContext";
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { View, Text, Dimensions, StyleSheet, ImageBackground } from "react-native";
+import {View, Text, Dimensions, StyleSheet, ImageBackground, ScrollView, Pressable} from "react-native";
 import { useRoute } from "@react-navigation/native";
 import uuid from 'react-native-uuid';
 
@@ -13,10 +13,10 @@ const { width, height } = Dimensions.get('window');
 
 const coords = {
     thrown: { x: width / 2 + 100, y: height - 100 },
-    deck: { x: width / 2, y: height - 100 },
+    deck: { x: width / 2, y: height/2 },
     card: {
         x: (c) => width / 2 - 200 + c * 50,
-        y: (p) => 200 * (p + 1)
+        y: (p) => height-130 * (p + 1)
     }
 }
 
@@ -58,6 +58,69 @@ export default function GameScreen({ navigation }) {
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
 
+    const scrollRef = useRef(null); // Ref for the ScrollView
+    const scrollIntervalRef = useRef(null); // Ref for the setInterval
+    const scrollXRef = useRef(0); // Ref to track current scrollX (avoids stale state in intervals)
+    const contentWidthRef = useRef(0);
+    const [scrollState, setScrollState] = useState({
+        contentWidth: 0,
+        containerWidth: 0,
+        showLeft: false,
+        showRight: false,
+    });
+
+    // Add this inside GameScreen
+    const [isHandHovered, setIsHandHovered] = useState(false);
+    const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
+
+    const updateArrowState = (x) => {
+        setScrollState(prev => {
+            const { contentWidth, containerWidth } = prev;
+            const canScrollLeft = x > 0;
+            // -1 to account for rounding errors
+            const canScrollRight = x < (contentWidth - containerWidth) - 1;
+
+            return { ...prev, showLeft: canScrollLeft, showRight: canScrollRight };
+        });
+    };
+
+    const startScrolling = (direction) => {
+        // Clear any existing interval
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+
+        // Set a new interval to scroll repeatedly
+        scrollIntervalRef.current = setInterval(() => {
+            const SCROLL_STEP = 15; // How many pixels to scroll each step
+            let newX;
+
+            if (direction === 'left') {
+                newX = Math.max(0, scrollXRef.current - SCROLL_STEP);
+            } else {
+                newX = scrollXRef.current + SCROLL_STEP;
+            }
+
+            if (scrollRef.current) {
+                scrollRef.current.scrollTo({ x: newX, animated: false });
+            }
+        }, 50); // Adjust interval time (in ms) for speed
+    };
+
+    const stopScrolling = () => {
+        if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current);
+            scrollIntervalRef.current = null;
+        }
+    };
+
+    // Add cleanup effect for the interval
+    useEffect(() => {
+        return () => {
+            // Clear interval when component unmounts
+            if (scrollIntervalRef.current) {
+                clearInterval(scrollIntervalRef.current);
+            }
+        };
+    }, []);
 
     const CircleWithLabel = ({ x, y, size, color, label }) => {
         // Container for the circle and its label
@@ -226,7 +289,7 @@ export default function GameScreen({ navigation }) {
     }
 
 
-
+    console.log(cards)
     return (
         <View style={styles.container}>
             <ImageBackground
@@ -246,29 +309,12 @@ export default function GameScreen({ navigation }) {
                 )}
             </View>
 
-            {(cards.length !== 0) && Object.entries(cards).map(([p, arr], j) =>
-                arr.map((c, i) => (
-                    <Card key={`${p}-${i}`} type={c} onPress={() => handleSelectCard(i)}
-                        coords={[coords.card.x(i), coords.card.y(j)]} />
-                    //TU DAC ANiMACJE
-                ))
-            )}
-
+            {thrown &&
+                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} style={{ zIndex: 50 }} />}
+            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} zoom={false}/>}
             {cardsSelected &&
                 <Button title="Throw Selected Cards" onPress={handleThrowCard} />
-
             }
-
-            {thrown &&
-                <Card type={thrown} onPress={() => console.log(thrown)} coords={[coords.thrown.x, coords.thrown.y]} />}
-            {deck && <Card type={deck} onPress={handleTakeCard} coords={[coords.deck.x, coords.deck.y]} />}
-            {anims && Object.entries(anims).map(([uuid, animData]) => (
-                <AnimatedCard
-                    key={uuid}
-                    animData={animData}
-                    onFinish={() => removeAnim(uuid)}
-                />
-            ))}
 
             {circlesToDraw.map(circle => (
                 <CircleWithLabel
@@ -280,6 +326,130 @@ export default function GameScreen({ navigation }) {
                     label={circle.label} // Pass the label prop
                 />
             ))}
+
+            <View style={[styles.myHandContainer]}>
+
+                {/* --- ADD LEFT ARROW --- */}
+                {scrollState.showLeft && (
+                    <Pressable
+                        style={[styles.arrowContainer, styles.arrowLeft]}
+                        onPressIn={() => startScrolling('left')}
+                        onPressOut={stopScrolling}
+                        onHoverIn={() => startScrolling('left')} // For react-native-web
+                        onHoverOut={stopScrolling}              // For react-native-web
+                    >
+                        <Text style={styles.arrowText}>{"<"}</Text>
+                    </Pressable>
+                )}
+
+                <ScrollView
+                    ref={scrollRef}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    // ensure overflow is visible so the card doesn't get cut off when it moves up
+                    contentContainerStyle={[styles.myHandContent, isHandHovered && { height: 1000 }]}
+                    style={{ overflow: 'visible' }}
+                    scrollEventThrottle={16}
+                    onScroll={(event) => {
+                        const x = event.nativeEvent.contentOffset.x;
+                        scrollXRef.current = x;
+                        updateArrowState(x);
+                    }}
+                    onContentSizeChange={(newWidth, height) => {
+                        // ... (your existing logic)
+                        const oldWidth = contentWidthRef.current;
+                        if (newWidth > oldWidth && scrollRef.current) {
+                            stopScrolling();
+                            scrollRef.current.scrollToEnd({ animated: true });
+                        }
+                        contentWidthRef.current = newWidth;
+                        setScrollState(prev => {
+                            const canScrollRight = newWidth > prev.containerWidth;
+                            return {
+                                ...prev,
+                                contentWidth: newWidth,
+                                showRight: canScrollRight,
+                            };
+                        });
+                    }}
+                    onLayout={(event) => {
+                        setScrollState(prev => ({ ...prev, containerWidth: event.nativeEvent.layout.width }));
+                    }}
+                >
+                    {cards?.[0]?.map((c, i) => {
+                        const isThisCardHovered = hoveredCardIndex === i;
+
+                        return (
+                            <Pressable
+                                key={`0-${i}`}
+                                // We keep these to handle the container height,
+                                // but we WON'T use them for the individual card movement anymore.
+                                onHoverIn={() => {
+                                    setIsHandHovered(true);
+                                    setHoveredCardIndex(i);
+                                }}
+                                onHoverOut={() => {
+                                    setIsHandHovered(false);
+                                    setHoveredCardIndex(null);
+                                }}
+                                // *** SOLUTION: Use a function for style to get the 'hovered' state directly ***
+                                style={({ hovered }) => [
+                                    {
+                                        // Center content
+                                        justifyContent: 'center',
+                                        height: '100%',
+
+                                        // WEB ONLY: Smooth animation for transform AND margin
+                                        transition: 'all 0.3s ease-out',
+
+                                        // Dynamic styles based on the 'hovered' argument passed by Pressable
+                                        marginHorizontal: hovered ? 30 : 0,
+                                        zIndex: hovered ? 100 : 1,
+                                        transform: [
+                                            { translateY: hovered ? -100 : 0 }
+                                        ]
+                                    }
+                                ]}
+                            >
+                                <Card
+                                    key={`0-${i}`}
+                                    type={c}
+                                    onPress={() => handleSelectCard(i)}
+                                    coords={[coords.card.x(i), coords.card.y(0)]}
+                                    zoom={true}
+                                />
+                            </Pressable>
+                        )
+                    })}
+                </ScrollView>
+
+                {/* --- ADD RIGHT ARROW --- */}
+                {scrollState.showRight && (
+                    <Pressable
+                        style={[styles.arrowContainer, styles.arrowRight]}
+                        onPressIn={() => startScrolling('right')}
+                        onPressOut={stopScrolling}
+                        onHoverIn={() => startScrolling('right')} // For react-native-web
+                        onHoverOut={stopScrolling}              // For react-native-web
+                    >
+                        <Text style={styles.arrowText}>{">"}</Text>
+                    </Pressable>
+                )}
+
+            </View>
+
+
+
+
+            {anims && Object.entries(anims).map(([uuid, animData]) => (
+                <AnimatedCard
+                    key={uuid}
+                    animData={animData}
+                    onFinish={() => removeAnim(uuid)}
+                />
+            ))}
+
+
         </View>
     );
 }
@@ -306,5 +476,54 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
+    },
+    myHandContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        height: 150,
+        // Add flexDirection to allow arrows to be on the side
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    myHandContent: {
+        // ... (keep your existing myHandContent styles)
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        height:150
+    },
+    handCard: {
+        width: 80,
+        height: 120,
+        marginHorizontal: 4,
+    },
+
+    // --- ADD THESE NEW STYLES ---
+    arrowContainer: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        width: 40, // Width of the arrow touch area
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)', // Semi-transparent background
+        zIndex: 10, // Make sure it's on top of cards
+    },
+    arrowLeft: {
+        left: 0,
+        borderTopRightRadius: 10,
+        borderBottomRightRadius: 10,
+    },
+    arrowRight: {
+        right: 0,
+        borderTopLeftRadius: 10,
+        borderBottomLeftRadius: 10,
+    },
+    arrowText: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
     }
 })
