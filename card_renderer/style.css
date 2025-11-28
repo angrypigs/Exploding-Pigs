@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -57,7 +58,9 @@ html, body {
   text-align: center;
   color: #111;
   margin: 20px 10px 10px;
-  text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff;
+  text-shadow:
+    2px 2px 0 #fff,
+    -2px -2px 0 #fff;
   font-family: "Comic Sans MS", "Fredoka One", sans-serif;
 }
 

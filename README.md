@@ -1,12 +1,13 @@
 # Exploding Pigs
 
-**Exploding Pigs** is a client-server card game working on few-digits code rooms 
+**Exploding Pigs** is a client-server card game working on few-digits code rooms
 
 - [Installing](#Installing)
 - [Loading](#Loading)
 - [Authors](#Authors)
 
 ## Installing
+
 ```shell
 cd client
 npm install
@@ -14,7 +15,7 @@ cd ../server
 npm install
 ```
 
-## Loading 
+## Loading
 
 ### Server
 
@@ -29,6 +30,7 @@ node server.js
 cd client
 npx expo start
 ```
+
 ## Authors
 
 - Bartosz Wilczek - [GitHub](https://github.com/angrypigs)
