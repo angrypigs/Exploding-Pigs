@@ -39,9 +39,7 @@ export default function RoomScreen({ navigation }) {
             <View style={stylesMain.header}>
                 <Text style={stylesMain.text}>Game Room {roomCode}</Text>
                 <Text style={stylesMain.text}>Nickname: {nickname}</Text>
-                {name ? (
-                    <Text style={stylesMain.text}>Name: {name}</Text>
-                ) : null}
+                {name ? <Text style={stylesMain.text}>Name: {name}</Text> : null}
             </View>
             <PlayerList players={players} setPlayers={setPlayers} />
             <Button title="Ready" onPress={handlePlayerReady} />

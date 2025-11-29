@@ -3,7 +3,6 @@ import { data, rotateArray, shuffleArray } from '../utils.js';
 export class Room {
     constructor(max_players) {
         this.max_players = max_players;
-        this.used_deck = [];
         this.deck = [];
         this.thrown = [];
         this.players = new Map();
@@ -41,6 +40,10 @@ export class Room {
             list.push({ id, nickname: player.nickname });
         }
         return list;
+    }
+
+    validate_player(player_id) {
+        return this.players.has(player_id);
     }
 
     save_state() {
@@ -119,11 +122,8 @@ export class Room {
 
     handle_queue() {
         if (this.turns === 0) {
-            if (this.queue_dir)
-                this.queue_p = (this.queue_p + 1) % this.queue.length;
-            else
-                this.queue_p =
-                    (this.queue_p - 1 + this.queue.length) % this.queue.length;
+            if (this.queue_dir) this.queue_p = (this.queue_p + 1) % this.queue.length;
+            else this.queue_p = (this.queue_p - 1 + this.queue.length) % this.queue.length;
             if (this.queue_p_temp !== -1) this.queue_p = this.queue_p_temp;
             if (this.turns_temp) this.turns = this.turns_temp;
             else this.turns = 1;
@@ -137,23 +137,14 @@ export class Room {
         return this.queue[this.queue_p][0] === player_id;
     }
 
-    //FIXME: MAKE ACTIONES EVERY WHERE WHERE THERE IS 0 WHERE AN ACTION IS SUPOSED TO BE
-
     take_card_top(player_id) {
         console.log('take top');
-        if (
-            this.players.has(player_id) &&
-            this.deck.length > 0 &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
             this.turns--;
             this.save_state();
             this.negable = false;
             this.players.get(player_id).cards.push([this.deck.pop(), true]);
-            let action = [
-                ['move', 'deck', `${this.get_queue_index(player_id)}`, '0'],
-            ];
+            let action = [['move', 'deck', `${this.get_queue_index(player_id)}`, '0']];
             this.save_state_action(action);
             return action;
         }
@@ -162,21 +153,12 @@ export class Room {
 
     take_card_bot(player_id) {
         console.log('take bottom');
-        if (
-            this.players.has(player_id) &&
-            this.deck.length > 0 &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
             this.turns--;
             this.save_state();
             this.negable = false;
-            this.deck.reverse();
-            this.players.get(player_id).cards.push([this.deck.pop(), true]);
-            this.deck.reverse();
-            let action = [
-                ['move', 'deck', `${this.get_queue_index(player_id)}`, '0'],
-            ];
+            this.players.get(player_id).cards.push([this.deck.shift(), true]);
+            let action = [['move', 'deck', `${this.get_queue_index(player_id)}`, '0']];
             this.save_state_action(action);
             return action;
         }
@@ -189,17 +171,11 @@ export class Room {
 
     skip_turn(player_id) {
         console.log('skip');
-        if (
-            this.players.has(player_id) &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.is_player_turn(player_id) && this.turns > 0) {
             this.save_state();
             this.turns--;
             this.negable = true;
-            let action = [
-                ['move', `${this.get_queue_index(player_id)}`, 'thrown', '3'],
-            ];
+            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '3']];
             this.save_state_action(action);
             return action;
         }
@@ -208,17 +184,11 @@ export class Room {
 
     skip_all_turns(player_id) {
         console.log('skip all');
-        if (
-            this.players.has(player_id) &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.is_player_turn(player_id) && this.turns > 0) {
             this.save_state();
             this.turns = 0;
             this.negable = true;
-            let action = [
-                ['move', `${this.get_queue_index(player_id)}`, 'thrown', '4'],
-            ];
+            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '4']];
             this.save_state_action(action);
             return action;
         }
@@ -227,17 +197,11 @@ export class Room {
 
     shuffle_deck(player_id) {
         console.log('shuffle');
-        if (
-            this.players.has(player_id) &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.is_player_turn(player_id) && this.turns > 0) {
             this.save_state();
             this.negable = true;
             shuffleArray(this.deck);
-            let action = [
-                ['move', `${this.get_queue_index(player_id)}`, 'thrown', '8'],
-            ];
+            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '8']];
             this.save_state_action(action);
             return action;
         }
@@ -246,18 +210,12 @@ export class Room {
 
     inverse_queue(player_id) {
         console.log('inverse');
-        if (
-            this.players.has(player_id) &&
-            this.queue[this.queue_p][0] === player_id &&
-            this.turns > 0
-        ) {
+        if (this.is_player_turn(player_id) && this.turns > 0) {
             this.save_state();
             this.negable = true;
             this.turns--;
             this.queue_dir = !this.queue_dir;
-            let action = [
-                ['move', `${this.get_queue_index(player_id)}`, 'thrown', '5'],
-            ];
+            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '5']];
             this.save_state_action(action);
             return action;
         }

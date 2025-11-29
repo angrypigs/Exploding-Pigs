@@ -47,35 +47,26 @@ export default function CreateRoomScreen({ navigation }) {
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.createMaxPlayers}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, createMaxPlayers: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, createMaxPlayers: text })}
                     placeholder="Max players {between 2 and 8}"
                 />
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.createNickname}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, createNickname: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, createNickname: text })}
                     placeholder="Nickname"
                 />
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.createName}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, createName: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, createName: text })}
                     placeholder="Name {optional}"
                 />
                 <TouchableOpacity style={stylesMain.test} onPress={handleSkip}>
                     <Text style={stylesMain.testText}>Skip</Text>
                 </TouchableOpacity>
                 <Button title="Create Room" onPress={handleRoomCreate} />
-                <Button
-                    title="Home"
-                    onPress={() => navigation.navigate('Home')}
-                />
+                <Button title="Home" onPress={() => navigation.navigate('Home')} />
             </View>
         </View>
     );

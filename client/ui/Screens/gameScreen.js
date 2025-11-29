@@ -53,7 +53,7 @@ export default function GameScreen({ navigation }) {
     const { roomCode, nickname, name } = route.params;
 
     const [cards, setCards] = useState({});
-    const [cardsSelected, setCardsSelected] = useState(false);
+    const [cardsSelected, setCardsSelected] = useState([]);
     const [thrown, setThrown] = useState(null);
     const [deck, setDeck] = useState(null);
     const [anims, setAnims] = useState(null);
@@ -61,7 +61,6 @@ export default function GameScreen({ navigation }) {
     const [turnPointer, setTurnPointer] = useState(null);
 
     const cards_ref = useRef({});
-    const cardsSelected_ref = useRef([]);
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
 
@@ -229,16 +228,12 @@ export default function GameScreen({ navigation }) {
             if (turn_data) {
                 setTurnPointer(turn_data);
             }
-            cardsSelected_ref.current = [];
-            setCardsSelected(false);
+            setCardsSelected([]);
 
             if (newAnims === false) {
                 console.warn('refreshGame odrzucony przez serwer');
                 return;
-            } else if (
-                newAnims === null ||
-                (Array.isArray(newAnims) && newAnims.length === 0)
-            ) {
+            } else if (newAnims === null || (Array.isArray(newAnims) && newAnims.length === 0)) {
                 console.log('Anims = null lub []');
                 cards_ref.current = cards;
                 thrown_ref.current = thrown;
@@ -278,22 +273,19 @@ export default function GameScreen({ navigation }) {
     };
 
     const handleSelectCard = index => {
-        if (cardsSelected_ref.current.includes(index)) {
-            cardsSelected_ref.current = cardsSelected_ref.current.filter(
-                i => i != index
-            );
+        if (cardsSelected.includes(index)) {
+            setCardsSelected(prev => {return prev.filter(i => i != index)})
             //   console.log("usuwany");
         } else {
-            cardsSelected_ref.current.push(index);
+            setCardsSelected(prev => [...prev, index])
             //   console.log("dodawany");
         }
         // console.log(`selected ${cardsSelected_ref.current}`);
-        setCardsSelected(cardsSelected_ref.current.length !== 0);
     };
 
     const handleThrowCard = () => {
-        socket.emit('throwCard', roomCode, cardsSelected_ref.current);
-        cardsSelected_ref.current = [];
+        socket.emit('throwCard', roomCode, cardsSelected);
+        setCardsSelected([]);
     };
 
     const removeAnim = id => {
@@ -343,12 +335,7 @@ export default function GameScreen({ navigation }) {
                     zoom={false}
                 />
             )}
-            {cardsSelected && (
-                <Button
-                    title="Throw Selected Cards"
-                    onPress={handleThrowCard}
-                />
-            )}
+            {(cardsSelected.length > 0) && <Button title="Throw Selected Cards" onPress={handleThrowCard} />}
 
             {circlesToDraw.map(circle => (
                 <CircleWithLabel
@@ -400,8 +387,7 @@ export default function GameScreen({ navigation }) {
                         }
                         contentWidthRef.current = newWidth;
                         setScrollState(prev => {
-                            const canScrollRight =
-                                newWidth > prev.containerWidth;
+                            const canScrollRight = newWidth > prev.containerWidth;
                             return {
                                 ...prev,
                                 contentWidth: newWidth,
@@ -445,9 +431,7 @@ export default function GameScreen({ navigation }) {
                                         // Dynamic styles based on the 'hovered' argument passed by Pressable
                                         marginHorizontal: hovered ? 30 : 0,
                                         zIndex: hovered ? 100 : 1,
-                                        transform: [
-                                            { translateY: hovered ? -100 : 0 },
-                                        ],
+                                        transform: [{ translateY: hovered ? -100 : 0 }],
                                     },
                                 ]}
                             >
@@ -455,11 +439,9 @@ export default function GameScreen({ navigation }) {
                                     key={`0-${i}`}
                                     type={c}
                                     onPress={() => handleSelectCard(i)}
-                                    coords={[
-                                        coords.card.x(i),
-                                        coords.card.y(0),
-                                    ]}
+                                    coords={[coords.card.x(i), coords.card.y(0)]}
                                     zoom={true}
+                                    isChosen={cardsSelected.includes(i)}
                                 />
                             </Pressable>
                         );

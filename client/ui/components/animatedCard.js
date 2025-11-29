@@ -29,10 +29,7 @@ export default function AnimatedCard({ animData, onFinish }) {
     useEffect(() => {
         const delay = animData.delay ?? 0;
 
-        x.value = withDelay(
-            delay,
-            withTiming(animData.targetX, { duration: 800 })
-        );
+        x.value = withDelay(delay, withTiming(animData.targetX, { duration: 800 }));
 
         y.value = withDelay(
             delay,
@@ -44,7 +41,5 @@ export default function AnimatedCard({ animData, onFinish }) {
 
     if (!card) return null;
 
-    return (
-        <Animated.Image source={card.img} resizeMode="contain" style={style} />
-    );
+    return <Animated.Image source={card.img} resizeMode="contain" style={style} />;
 }

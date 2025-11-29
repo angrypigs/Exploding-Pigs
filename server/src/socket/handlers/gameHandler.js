@@ -3,7 +3,7 @@ import { VALID_OBJ } from '../../modules/gamelogic.js';
 export default function gameHandler(io, socket, rooms) {
     socket.on('takeCard', code => {
         const room = rooms.get(code);
-        if (room) {
+        if (room && room.validate_player(socket.id)) {
             const action = room.take_card_top(socket.id);
             console.log(`Action from ${socket.id}: ${action}`);
             if (action) {
@@ -31,7 +31,7 @@ export default function gameHandler(io, socket, rooms) {
     //FIXME: DO CHECKS FOR ERORRS ETC
     socket.on('throwCard', (code, cardsSelected) => {
         const room = rooms.get(code);
-        if (room) {
+        if (room && room.validate_player(socket.id)) {
             console.log(`${cardsSelected}`);
 
             let actions = null;
@@ -47,7 +47,7 @@ export default function gameHandler(io, socket, rooms) {
                 for (const c of sortedIndices) {
                     playerCards.splice(c, 1);
                 }
-                room.handle_queue();
+                const turn_data = room.handle_queue();
 
                 for (const key of room.players.keys()) {
                     const res = room.serve_cards(key);
@@ -59,7 +59,8 @@ export default function gameHandler(io, socket, rooms) {
                         actions,
                         res['cards'],
                         res['deck'],
-                        res['thrown']
+                        res['thrown'],
+                        turn_data
                     );
                 }
             } else {

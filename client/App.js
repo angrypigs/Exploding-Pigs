@@ -22,10 +22,7 @@ export default function App() {
                     <Stack.Screen name="Home" component={HomeScreen} />
                     <Stack.Screen name="Room" component={RoomScreen} />
                     <Stack.Screen name="JoinRoom" component={JoinRoomScreen} />
-                    <Stack.Screen
-                        name="CreateRoom"
-                        component={CreateRoomScreen}
-                    />
+                    <Stack.Screen name="CreateRoom" component={CreateRoomScreen} />
                     <Stack.Screen name="Game" component={GameScreen} />
                 </Stack.Navigator>
             </NavigationContainer>

@@ -17,6 +17,4 @@ const io = new Server(server, {
 
 socketHandler(io, rooms);
 
-server.listen(4000, '0.0.0.0', () =>
-    console.log('Serwer działa na http://localhost:4000')
-);
+server.listen(4000, '0.0.0.0', () => console.log('Serwer działa na http://localhost:4000'));

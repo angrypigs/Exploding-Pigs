@@ -4,16 +4,10 @@ export default function roomHandler(io, socket, rooms) {
     socket.on('joinRoom', (code, nickname, name) => {
         if (rooms.has(code)) {
             let room = rooms.get(code);
-            if (
-                room.add_player(socket.id, nickname, name) &&
-                !room.room_closed
-            ) {
+            if (room.add_player(socket.id, nickname, name) && !room.room_closed) {
                 socket.join(code);
                 socket.emit('joinRoom', code, nickname, name);
-                io.to(code).emit(
-                    'refreshRoom',
-                    rooms.get(code).get_player_list()
-                );
+                io.to(code).emit('refreshRoom', rooms.get(code).get_player_list());
             } else {
                 socket.emit('joinRoom', false, 'Room is full');
             }

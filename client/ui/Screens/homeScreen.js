@@ -31,14 +31,8 @@ export default function HomeScreen({ navigation }) {
     return (
         <View style={stylesMain.container}>
             <Text style={stylesMain.text}>Exploding Pigs</Text>
-            <Button
-                title="Join Room"
-                onPress={() => navigation.navigate('JoinRoom')}
-            />
-            <Button
-                title="Create Room"
-                onPress={() => navigation.navigate('CreateRoom')}
-            />
+            <Button title="Join Room" onPress={() => navigation.navigate('JoinRoom')} />
+            <Button title="Create Room" onPress={() => navigation.navigate('CreateRoom')} />
         </View>
     );
 }

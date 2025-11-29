@@ -18,12 +18,7 @@ export default function JoinRoomScreen({ navigation }) {
     const handleRoomJoin = () => {
         if (isGameCode(inputs.joinCode)) {
             if (inputs.joinNickname) {
-                socket.emit(
-                    'joinRoom',
-                    inputs.joinCode,
-                    inputs.joinNickname,
-                    inputs.joinName
-                );
+                socket.emit('joinRoom', inputs.joinCode, inputs.joinNickname, inputs.joinName);
             } else {
                 Alert.alert('', 'Nickname is necessary');
                 console.log('Nickname is necessary');
@@ -47,35 +42,26 @@ export default function JoinRoomScreen({ navigation }) {
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.joinCode}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, joinCode: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, joinCode: text })}
                     placeholder="Room code"
                 />
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.joinNickname}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, joinNickname: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, joinNickname: text })}
                     placeholder="Nickname"
                 />
                 <TextInput
                     style={stylesMain.input}
                     value={inputs.joinName}
-                    onChangeText={text =>
-                        setInputs({ ...inputs, joinName: text })
-                    }
+                    onChangeText={text => setInputs({ ...inputs, joinName: text })}
                     placeholder="Name {optional}"
                 />
                 <TouchableOpacity style={stylesMain.test} onPress={handleSkip}>
                     <Text style={stylesMain.testText}>Skip</Text>
                 </TouchableOpacity>
                 <Button title="Join Room" onPress={handleRoomJoin} />
-                <Button
-                    title="Home"
-                    onPress={() => navigation.navigate('Home')}
-                />
+                <Button title="Home" onPress={() => navigation.navigate('Home')} />
             </View>
         </View>
     );

@@ -4,7 +4,7 @@
     "semi": true,
     "tabWidth": 4,
     "useTabs": false,
-    "printWidth": 80,
+    "printWidth": 100,
     "arrowParens": "avoid",
     "endOfLine": "auto",
     "plugins": ["prettier-plugin-organize-imports"]

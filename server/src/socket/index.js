@@ -12,21 +12,13 @@ export default function socketHandler(io, rooms) {
                 if (room.players.has(socket.id)) {
                     room.players.delete(socket.id);
                     room.queue = room.queue.filter(el => el[0] !== socket.id);
-                    if (room.queue_dir)
-                        room.queue_p = room.queue_p % room.queue.length;
-                    else
-                        room.queue_p =
-                            (room.queue_p - 1 + room.queue.length) %
-                            room.queue.length;
-                    console.log(
-                        `Usunięto gracza ${socket.id} z pokoju ${code}`
-                    );
+                    if (room.queue_dir) room.queue_p = room.queue_p % room.queue.length;
+                    else room.queue_p = (room.queue_p - 1 + room.queue.length) % room.queue.length;
+                    console.log(`Usunięto gracza ${socket.id} z pokoju ${code}`);
                     io.to(code).emit('refreshRoom', room.get_player_list());
                     if (room.players.size === 0) {
                         rooms.delete(code);
-                        console.log(
-                            `Pokój ${code} został usunięty, bo nie ma graczy`
-                        );
+                        console.log(`Pokój ${code} został usunięty, bo nie ma graczy`);
                     }
                     break;
                 }

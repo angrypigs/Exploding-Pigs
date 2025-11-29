@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet } from 'react-native';
 import { cards_data } from '../../utils';
 
-export default function Card({ type, onPress, style, zoom }) {
+export default function Card({ type, onPress, style, zoom, isChosen }) {
     const card = cards_data[type];
     if (!card) return null;
     const [isHovered, setIsHovered] = useState(false); // 2. Add hover state
@@ -16,7 +16,8 @@ export default function Card({ type, onPress, style, zoom }) {
             style={[
                 styles.card, // Base style
                 style, // Parent style (from GameScreen)
-                isHovered && styles.hoveredCard, // Apply hover style when true
+                isHovered && styles.hoveredCard,
+                isChosen && styles.chosenCard // Apply hover style when true
             ]}
             // 4. Add event handlers to update state
             onHoverIn={() => {
@@ -27,11 +28,7 @@ export default function Card({ type, onPress, style, zoom }) {
             }}
             onHoverOut={() => setIsHovered(false)}
         >
-            <Image
-                source={card.img}
-                resizeMode="contain"
-                style={styles.image}
-            />
+            <Image source={card.img} resizeMode="contain" style={styles.image} />
         </Pressable>
     );
 }
@@ -50,9 +47,16 @@ const styles = StyleSheet.create({
     },
     hoveredCard: {
         transform: [
-            { scale: 3 }, // Make it 15% bigger
+            { scale: 2 }, // Make it 15% bigger
             { translateY: -50 }, // Lift it up by 10 pixels
         ],
         zIndex: 1000, // CRITICAL: Make sure it's on top of other cards
+        elevation: (Platform.OS !== 'ios') ? 1000 : 0
     },
+    chosenCard: {
+        shadowColor: '#dcea12ff',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 5, 
+    }
 });

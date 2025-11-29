@@ -7,9 +7,5 @@ export const SocketContext = createContext(null);
 const socket = io('http://127.0.0.1:4000'); //localhost
 
 export function SocketProvider({ children }) {
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    );
+    return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>;
 }
