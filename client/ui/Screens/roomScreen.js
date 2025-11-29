@@ -1,11 +1,11 @@
-import { SocketContext } from "../../contexts/socketContext";
-import React, { useState, useContext, useEffect } from "react";
-import { View, Text } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute } from '@react-navigation/native';
+import { useContext, useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
+import { SocketContext } from '../../contexts/socketContext';
 
-import { stylesMain } from "../../styles/style_main";
-import { PlayerList } from "../components/player_list";
-import { Button } from "../components/button"
+import { stylesMain } from '../../styles/style_main';
+import { Button } from '../components/button';
+import { PlayerList } from '../components/player_list';
 
 export default function RoomScreen({ navigation }) {
     const socket = useContext(SocketContext);
@@ -13,27 +13,26 @@ export default function RoomScreen({ navigation }) {
     const { roomCode, nickname, name } = route.params;
 
     const handlePlayerReady = () => {
-        socket.emit("playerReady", roomCode);
-    }
+        socket.emit('playerReady', roomCode);
+    };
 
     const [players, setPlayers] = useState([]);
 
     useEffect(() => {
-        socket.on("refreshRoom", (newPlayers) => {
+        socket.on('refreshRoom', newPlayers => {
             if (newPlayers) setPlayers(newPlayers);
         });
-        return () => socket.off("refreshRoom");
+        return () => socket.off('refreshRoom');
     }, [socket]);
 
     useEffect(() => {
-        socket.on("roomReady", () => {
-            navigation.replace("Game", { roomCode: roomCode, nickname, name });
+        socket.on('roomReady', () => {
+            navigation.replace('Game', { roomCode: roomCode, nickname, name });
         });
-        return () => socket.off("roomReady");
+        return () => socket.off('roomReady');
     }, [socket]);
 
-    socket.emit("refreshRoom", roomCode);
-
+    socket.emit('refreshRoom', roomCode);
 
     return (
         <View style={stylesMain.container}>
