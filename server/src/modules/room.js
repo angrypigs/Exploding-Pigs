@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { data, rotateArray, shuffleArray } from '../utils.js';
 
 export class Room {
@@ -23,10 +24,10 @@ export class Room {
     add_player(id, nickname, name) {
         if (this.players.size < this.max_players) {
             this.players.set(id, {
+                publicId: crypto.randomUUID(),
                 nickname: nickname,
                 name: name,
                 readyFlag: false,
-                nextTurn: false,
                 cards: [],
             });
             return true;
@@ -74,6 +75,11 @@ export class Room {
         return this.queue.findIndex(s => s[0] === id);
     }
 
+    get_player_uuid(id) {
+        const item = this.queue.find(s => s[0] === id);
+        return item ? item[1] : null;
+    }
+
     start_game() {
         let deck = [];
         Object.entries(data).forEach(([key, value]) => {
@@ -82,15 +88,15 @@ export class Room {
             }
         });
         shuffleArray(deck);
-        let counter = 0;
         for (const key of this.players.keys()) {
-            this.players.get(key).cards.push(['2', true]);
+            let player = this.players.get(key);
+            player.cards.push(['2', true]);
             for (let i = 0; i < 7; i++) {
-                this.players.get(key).cards.push([deck.pop(), true]);
+                player.cards.push([deck.pop(), true]);
             }
-            shuffleArray(this.players.get(key).cards);
-            this.queue.push([key, counter]);
-            counter++;
+            shuffleArray(player.cards);
+            const pubId = player.publicId;
+            this.queue.push([key, pubId]);
         }
         deck.push('2');
         for (const key of this.players.keys()) {
@@ -108,13 +114,18 @@ export class Room {
         const index = this.queue.findIndex(([socketId]) => socketId === id);
         const rotatedQueue = rotateArray(this.queue, index);
         const cards = {};
-        for (const [socketId] of rotatedQueue) {
+        for (const [socketId, publicId] of rotatedQueue) {
             const hand = [];
             for (const c of this.players.get(socketId).cards) {
                 hand.push(!c[1] || socketId === id ? c[0] : '0');
             }
+
             const playerIndex = rotatedQueue.findIndex(s => s[0] === socketId);
-            cards[playerIndex] = hand;
+            cards[playerIndex] = {
+                hand: hand,
+                publicId: publicId,
+                nickname: this.players.get(socketId).nickname,
+            };
         }
         res['cards'] = cards;
         return res;
@@ -158,7 +169,7 @@ export class Room {
             this.save_state();
             this.negable = false;
             this.players.get(player_id).cards.push([this.deck.shift(), true]);
-            let action = [['move', 'deck', `${this.get_queue_index(player_id)}`, '0']];
+            let action = [['move', 'deck', this.get_player_uuid(player_id), '0']];
             this.save_state_action(action);
             return action;
         }
@@ -175,7 +186,7 @@ export class Room {
             this.save_state();
             this.turns--;
             this.negable = true;
-            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '3']];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '3']];
             this.save_state_action(action);
             return action;
         }
@@ -188,7 +199,7 @@ export class Room {
             this.save_state();
             this.turns = 0;
             this.negable = true;
-            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '4']];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '4']];
             this.save_state_action(action);
             return action;
         }
@@ -201,7 +212,7 @@ export class Room {
             this.save_state();
             this.negable = true;
             shuffleArray(this.deck);
-            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '8']];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '8']];
             this.save_state_action(action);
             return action;
         }
@@ -215,7 +226,7 @@ export class Room {
             this.negable = true;
             this.turns--;
             this.queue_dir = !this.queue_dir;
-            let action = [['move', `${this.get_queue_index(player_id)}`, 'thrown', '5']];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '5']];
             this.save_state_action(action);
             return action;
         }
@@ -225,11 +236,37 @@ export class Room {
     attack_n_times(player_id, n, target_id) {}
 
     all_bombs_top(player_id) {
-        //TODO: this
+        console.log('bombs on top');
+        if (this.is_player_turn(player_id) && this.turns > 0) {
+            this.save_state();
+            this.negable = true;
+            let old_len = this.deck.length;
+            this.deck = this.deck.filter(x => x !== '1');
+            shuffleArray(this.deck);
+            let bombs = Array(old_len - this.deck.length).fill('1');
+            this.deck = [...this.deck, ...bombs];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '17']];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
     all_bombs_bot(player_id) {
-        //TODO: this
+        console.log('bombs on bottom');
+        if (this.is_player_turn(player_id) && this.turns > 0) {
+            this.save_state();
+            this.negable = true;
+            let old_len = this.deck.length;
+            this.deck = this.deck.filter(x => x !== '1');
+            shuffleArray(this.deck);
+            let bombs = Array(old_len - this.deck.length).fill('1');
+            this.deck = [...bombs, ...this.deck];
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '18']];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
     }
 
     piss_player(player_id) {}

@@ -1,15 +1,15 @@
 import { useRoute } from '@react-navigation/native';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-web';
 import uuid from 'react-native-uuid';
+import { Button } from 'react-native-web';
 
 import { SocketContext } from '../../contexts/socketContext';
 import { stylesMain } from '../../styles/style_main';
 import AnimatedCard from '../components/animatedCard';
 import Card from '../components/card';
-import PlayerHand from '../components/PlayerHand';
 import OtherPlayers from '../components/OtherPlayers';
+import PlayerHand from '../components/PlayerHand';
 import { coords, coordsAnimHandler } from '../utils/gameUtils';
 
 export default function GameScreen({ navigation }) {
@@ -31,9 +31,9 @@ export default function GameScreen({ navigation }) {
 
     useEffect(() => {
         if (anims === null) {
-            if (cards_ref.current !== null) setCards(cards_ref.current);
-            if (thrown_ref.current !== null) setThrown(thrown_ref.current);
-            if (deck_ref.current !== null) setDeck(deck_ref.current);
+            if (cards_ref.current != null) setCards(cards_ref.current);
+            if (thrown_ref.current != null) setThrown(thrown_ref.current);
+            if (deck_ref.current != null) setDeck(deck_ref.current);
         }
     }, [animTrigger]);
 
@@ -41,7 +41,7 @@ export default function GameScreen({ navigation }) {
         socket.on('refreshGame', (newAnims, s_cards, s_deck, s_thrown, turn_data) => {
             if (turn_data) setTurnPointer(turn_data);
             setCardsSelected([]);
-
+            console.log(s_cards);
             cards_ref.current = s_cards;
             thrown_ref.current = s_thrown;
             deck_ref.current = s_deck;
@@ -135,10 +135,12 @@ export default function GameScreen({ navigation }) {
             )}
 
             {/* Action Buttons */}
-            {(cardsSelected.length > 0) && <Button title="Throw Selected Cards" onPress={handleThrowCard} />}
+            {cardsSelected.length > 0 && (
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+            )}
 
             {/* Other Players (Walls) */}
-            <OtherPlayers />
+            <OtherPlayers cards={cards} />
 
             {/* Player Hand (Bottom Scroll) */}
             <PlayerHand

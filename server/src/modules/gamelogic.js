@@ -285,8 +285,7 @@ export function valid_17(room, player_id, indexesOfSelectedCards) {
         indexesOfSelectedCards.length === 1 &&
         room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === '17'
     ) {
-        //all bombs top + suffle rest
-        return [];
+        return room.all_bombs_top(player_id);
     } else {
         return null;
     }
@@ -297,8 +296,7 @@ export function valid_18(room, player_id, indexesOfSelectedCards) {
         indexesOfSelectedCards.length === 1 &&
         room.players.get(player_id).cards[indexesOfSelectedCards[0]][0] === '18'
     ) {
-        //all bombs bot + suffle rest
-        return [];
+        return room.all_bombs_bot(player_id);
     } else {
         return null;
     }

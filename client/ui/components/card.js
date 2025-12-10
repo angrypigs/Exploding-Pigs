@@ -17,7 +17,7 @@ export default function Card({ type, onPress, style, zoom, isChosen }) {
                 styles.card, // Base style
                 style, // Parent style (from GameScreen)
                 isHovered && styles.hoveredCard,
-                isChosen && styles.chosenCard // Apply hover style when true
+                isChosen && styles.chosenCard, // Apply hover style when true
             ]}
             // 4. Add event handlers to update state
             onHoverIn={() => {
@@ -51,12 +51,12 @@ const styles = StyleSheet.create({
             { translateY: -50 }, // Lift it up by 10 pixels
         ],
         zIndex: 1000, // CRITICAL: Make sure it's on top of other cards
-        elevation: (Platform.OS !== 'ios') ? 1000 : 0
+        elevation: Platform.OS !== 'ios' ? 1000 : 0,
     },
     chosenCard: {
         shadowColor: '#dcea12ff',
         shadowOffset: { width: 4, height: 4 },
         shadowOpacity: 0.5,
-        shadowRadius: 5, 
-    }
+        shadowRadius: 5,
+    },
 });

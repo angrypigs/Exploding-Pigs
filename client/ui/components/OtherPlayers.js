@@ -1,26 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import {generateWallCircles} from "../utils/gameUtils";
+import { StyleSheet, Text, View } from 'react-native';
+import { generateWallCircles } from '../utils/gameUtils';
 
 const CircleWithLabel = ({ x, y, size, color, label }) => {
     return (
         <View style={[styles.container, { left: x, top: y }]}>
-            <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2, backgroundColor: color || 'tomato' }]} />
+            <View
+                style={[
+                    styles.circle,
+                    {
+                        width: size,
+                        height: size,
+                        borderRadius: size / 2,
+                        backgroundColor: color || 'tomato',
+                    },
+                ]}
+            />
             {label && <Text style={styles.text}>{label}</Text>}
         </View>
     );
 };
 
-export default function OtherPlayers() {
-    const circlesToDraw = generateWallCircles();
-
+export default function OtherPlayers({ cards }) {
+    const circlesToDraw = generateWallCircles(cards);
     return (
         <>
             {circlesToDraw.map(circle => (
-                <CircleWithLabel
-                    key={circle.id}
-                    {...circle}
-                />
+                <CircleWithLabel key={circle.id} {...circle} />
             ))}
         </>
     );

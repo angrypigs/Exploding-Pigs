@@ -11,53 +11,47 @@ export const coords = {
     },
 };
 
+let tempCoords = [
+    [0.1, 0.7],
+    [0.2, 0.3],
+    [0.35, 0.2],
+    [0.5, 0.1],
+    [0.65, 0.2],
+    [0.8, 0.3],
+    [0.9, 0.7],
+];
+const playerCoords = tempCoords.filter(x => [x[0] * width, x[1] * height]);
+const playerOffsets = {
+    0: [],
+    1: [],
+    2: [3],
+    3: [2, 4],
+    4: [1, 3, 5],
+    5: [1, 2, 4, 5],
+    6: [0, 2, 3, 4, 6],
+    7: [0, 1, 2, 4, 5, 6],
+    8: [0, 1, 2, 3, 4, 5, 6],
+};
+
 export function coordsAnimHandler(target) {
     if (target === 'thrown' || target === 'deck') return { ...coords[target] };
     let points = target.split(':').map(Number);
     return { x: coords.card.x(0), y: coords.card.y(points[0]) };
 }
 
-export const generateWallCircles = () => {
+export const generateWallCircles = cards => {
     const circles = [];
-    const CIRCLE_SIZE = 80;
-    const PADDING = 30;
-    const LABEL_HEIGHT_APPROX = 20;
-
-    // 1. Left Wall
-    for (let i = 1; i <= 2; i++) {
+    playerOffsets[Object.keys(cards)?.length ?? 1].map((val, i) => {
+        let c = playerCoords[val];
         circles.push({
-            id: `left-${i}`,
-            x: PADDING,
-            y: (height / 3) * i - CIRCLE_SIZE / 2 - LABEL_HEIGHT_APPROX / 2,
-            size: CIRCLE_SIZE,
-            color: '#3498db',
-            label: `Left ${i}`,
+            id: `playerCircle-${i}`,
+            x: c[0],
+            y: c[1],
+            size: 80,
+            color: i % 2 === 0 ? '#3498db' : '#db3434ff',
+            label: cards?.[i + 1]?.nickname,
         });
-    }
-
-    // 2. Top Wall
-    for (let i = 1; i <= 3; i++) {
-        circles.push({
-            id: `top-${i}`,
-            x: (width / 4) * i - CIRCLE_SIZE / 2,
-            y: PADDING,
-            size: CIRCLE_SIZE,
-            color: '#e74c3c',
-            label: `Top ${i}`,
-        });
-    }
-
-    // 3. Right Wall
-    for (let i = 1; i <= 2; i++) {
-        circles.push({
-            id: `right-${i}`,
-            x: width - CIRCLE_SIZE - PADDING,
-            y: (height / 3) * i - CIRCLE_SIZE / 2 - LABEL_HEIGHT_APPROX / 2,
-            size: CIRCLE_SIZE,
-            color: '#2ecc71',
-            label: `Right ${i}`,
-        });
-    }
+    });
 
     return circles;
 };
