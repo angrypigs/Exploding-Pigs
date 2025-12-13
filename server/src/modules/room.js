@@ -5,19 +5,36 @@ export class Room {
     constructor(max_players) {
         this.max_players = max_players;
         this.deck = [];
+        /**Used cards array */
         this.thrown = [];
+        /**
+         * players Map object
+         * - key: socket ID
+         * - publicId: UUID, used to select players on the client side
+         * - readyFlag: used for game start
+         * - cards: array of two-element arrays [<cardId>, <visible/not>]
+         */
         this.players = new Map();
         this.room_closed = false;
 
+        /**Determines the game order, consists of socket ID-s */
         this.queue = [];
+        /**Points onto queue ID of player that currently has action to do */
         this.queue_p = 0;
+        /**Queue dir (used by reverse card) */
         this.queue_dir = true;
+        /**Number of turns that player has to do before switching to another player */
         this.turns = 1;
+        /**Temp field for counting the */
         this.turns_temp = 0;
+        /**Temp field to save the chosen person in sniper card action */
         this.queue_p_temp = -1;
 
+        /**Used to recover game state after usage of nu nu nu card */
         this.last_state = null;
+        /**Determines whether last action can be recovered by nu nu nu card */
         this.negable = false;
+        /**Actions transaction flag */
         this.change_flag = true;
     }
 
@@ -43,10 +60,12 @@ export class Room {
         return list;
     }
 
+    /**Returns whether player is in the room */
     validate_player(player_id) {
         return this.players.has(player_id);
     }
 
+    /**Creates a game backup to restore after the usage of nu nu nu card */
     save_state() {
         this.change_flag = false;
         this.last_state = {
@@ -59,11 +78,13 @@ export class Room {
         }
     }
 
+    /**Adds last action to the last state and frees transaction flag */
     save_state_action(action) {
         this.last_state['action'] = action;
         this.change_flag = true;
     }
 
+    /**Debug prints */
     print_game() {
         console.log(`Deck - ${this.deck}`);
         for (const [socketId, idx] of this.queue) {
@@ -106,6 +127,10 @@ export class Room {
         this.deck = deck;
     }
 
+    /**Gives a view of a game state based on player with the given id
+     * @returns {{ [key: string]: string }}
+     * - 'cards': queueID -> 'hand': cards, 'publicId', 'nickname'
+     */
     serve_cards(id) {
         if (!this.players.has(id)) return null;
         const res = {};
@@ -131,6 +156,12 @@ export class Room {
         return res;
     }
 
+    indexes_to_cards(player_id, idx) {
+        let cards = this.players.get(player_id).cards;
+        return idx.map(x => cards[x][0]);
+    }
+
+    // Handles the queue direction, turns etc., should be runned after every change in this.turns
     handle_queue() {
         if (this.turns === 0) {
             if (this.queue_dir) this.queue_p = (this.queue_p + 1) % this.queue.length;
@@ -142,11 +173,11 @@ export class Room {
         return [this.queue_p, this.turns];
     }
 
-    //NOTE: PLAYER ACTIONS
-
     is_player_turn(player_id) {
         return this.queue[this.queue_p][0] === player_id;
     }
+
+    // ? ====== NOTE: PLAYER ACTIONS ======
 
     take_card_top(player_id) {
         console.log('take top');
@@ -165,8 +196,8 @@ export class Room {
     take_card_bot(player_id) {
         console.log('take bottom');
         if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
-            this.turns--;
             this.save_state();
+            this.turns--;
             this.negable = false;
             this.players.get(player_id).cards.push([this.deck.shift(), true]);
             let action = [['move', 'deck', this.get_player_uuid(player_id), '0']];
@@ -233,7 +264,9 @@ export class Room {
         return null;
     }
 
-    attack_n_times(player_id, n, target_id) {}
+    attack_n_times_next(player_id, n) {}
+
+    attack_n_times_target(player_id, n, target_id) {}
 
     all_bombs_top(player_id) {
         console.log('bombs on top');

@@ -1,4 +1,4 @@
-import { VALID_OBJ } from '../../modules/gamelogic.js';
+import { cardsValidation } from '../../modules/gamelogic.js';
 
 export default function gameHandler(io, socket, rooms) {
     socket.on('takeCard', code => {
@@ -29,29 +29,21 @@ export default function gameHandler(io, socket, rooms) {
     });
 
     //FIXME: DO CHECKS FOR ERORRS ETC
-    socket.on('throwCard', (code, cardsSelected) => {
+    socket.on('throwCard', (code, cardsIndexes) => {
         const room = rooms.get(code);
         if (room && room.validate_player(socket.id)) {
-            console.log(`${cardsSelected}`);
-
-            let actions = null;
-            for (const v of VALID_OBJ) {
-                if ((actions = v(room, socket.id, cardsSelected))) {
-                    console.log('VALID THROW');
-                    break;
-                }
-            }
+            let cards = room.indexes_to_cards(socket.id, cardsIndexes)
+            console.log(cards)
+            let actions = cardsValidation(room, socket.id, cards);
             if (actions !== null) {
                 const playerCards = room.players.get(socket.id).cards;
-                const sortedIndices = [...cardsSelected].sort((a, b) => b - a);
+                const sortedIndices = [...cardsIndexes].sort((a, b) => b - a);
                 for (const c of sortedIndices) {
                     playerCards.splice(c, 1);
                 }
                 const turn_data = room.handle_queue();
-
                 for (const key of room.players.keys()) {
                     const res = room.serve_cards(key);
-                    console.log(res['cards']);
                     console.log(actions);
                     // room.print_game()
                     io.to(key).emit(
