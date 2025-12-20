@@ -55,7 +55,7 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
     }, []);
 
     return (
-        <View style={styles.myHandContainer}>
+        <View style={styles.myHandContainer} pointerEvents="box-none">
             {scrollState.showLeft && (
                 <Pressable
                     style={[styles.arrowContainer, styles.arrowLeft]}
@@ -112,6 +112,15 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
                                 setIsHandHovered(false);
                                 setHoveredCardIndex(null);
                             }}
+                            onPressIn={() => {
+                                setIsHandHovered(true);
+                                setHoveredCardIndex(i);
+                            }}
+                            onPressOut={() => {
+                                setIsHandHovered(false);
+                                setHoveredCardIndex(null);
+                            }}
+                            onPress={() => onSelectCard(i)}
                             style={[styles.cardWrapper, isHovered && styles.cardWrapperHovered]}
                         >
                             <Card

@@ -10,6 +10,8 @@ export function cardsValidation(room, player_id, cardsIdx) {
                     return room.skip_all_turns(player_id);
                 case '5':
                     return room.inverse_queue(player_id);
+                case '6':
+                    return room.attack_n_times_next(player_id, 2);
                 case '8':
                     return room.shuffle_deck(player_id);
                 case '17':

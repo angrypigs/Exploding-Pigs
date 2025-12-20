@@ -1,8 +1,7 @@
 import { useRoute } from '@react-navigation/native';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { Button, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import uuid from 'react-native-uuid';
-import { Button } from 'react-native-web';
 
 import { SocketContext } from '../../contexts/socketContext';
 import { stylesMain } from '../../styles/style_main';

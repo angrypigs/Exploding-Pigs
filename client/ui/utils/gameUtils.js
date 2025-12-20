@@ -12,15 +12,15 @@ export const coords = {
 };
 
 let tempCoords = [
-    [0.1, 0.7],
-    [0.2, 0.3],
-    [0.35, 0.2],
-    [0.5, 0.1],
-    [0.65, 0.2],
-    [0.8, 0.3],
     [0.9, 0.7],
+    [0.8, 0.25],
+    [0.65, 0.1],
+    [0.5, 0.1],
+    [0.35, 0.1],
+    [0.2, 0.25],
+    [0.1, 0.7],
 ];
-const playerCoords = tempCoords.filter(x => [x[0] * width, x[1] * height]);
+const playerCoords = tempCoords.map(x => [x[0] * width, x[1] * height]);
 const playerOffsets = {
     0: [],
     1: [],

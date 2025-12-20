@@ -169,6 +169,8 @@ export class Room {
             if (this.queue_p_temp !== -1) this.queue_p = this.queue_p_temp;
             if (this.turns_temp) this.turns = this.turns_temp;
             else this.turns = 1;
+            this.turns_temp = 0;
+            this.queue_p_temp = -1;
         }
         return [this.queue_p, this.turns];
     }
@@ -182,8 +184,8 @@ export class Room {
     take_card_top(player_id) {
         console.log('take top');
         if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
-            this.turns--;
             this.save_state();
+            this.turns--;
             this.negable = false;
             this.players.get(player_id).cards.push([this.deck.pop(), true]);
             let action = [['move', 'deck', `${this.get_queue_index(player_id)}`, '0']];
@@ -264,7 +266,23 @@ export class Room {
         return null;
     }
 
-    attack_n_times_next(player_id, n) {}
+    attack_n_times_next(player_id, n) {
+        console.log(`attack ${n} times`);
+        if (this.is_player_turn(player_id) && this.turns > 0) {
+            this.save_state();
+            this.negable = true;
+            if (this.turns_temp > n - 1) {
+                this.turns_temp += n;
+            } else {
+                this.turns_temp = n;
+            }
+            this.turns--;
+            let action = [['move', this.get_player_uuid(player_id), 'thrown', '6']];
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
 
     attack_n_times_target(player_id, n, target_id) {}
 
