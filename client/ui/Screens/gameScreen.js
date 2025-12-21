@@ -1,15 +1,14 @@
 import { useRoute } from '@react-navigation/native';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-web';
+import { Button, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import uuid from 'react-native-uuid';
 
 import { SocketContext } from '../../contexts/socketContext';
 import { stylesMain } from '../../styles/style_main';
 import AnimatedCard from '../components/animatedCard';
 import Card from '../components/card';
-import PlayerHand from '../components/PlayerHand';
 import OtherPlayers from '../components/OtherPlayers';
+import PlayerHand from '../components/PlayerHand';
 import { coords, coordsAnimHandler } from '../utils/gameUtils';
 
 export default function GameScreen({ navigation }) {
@@ -31,9 +30,9 @@ export default function GameScreen({ navigation }) {
 
     useEffect(() => {
         if (anims === null) {
-            if (cards_ref.current !== null) setCards(cards_ref.current);
-            if (thrown_ref.current !== null) setThrown(thrown_ref.current);
-            if (deck_ref.current !== null) setDeck(deck_ref.current);
+            if (cards_ref.current != null) setCards(cards_ref.current);
+            if (thrown_ref.current != null) setThrown(thrown_ref.current);
+            if (deck_ref.current != null) setDeck(deck_ref.current);
         }
     }, [animTrigger]);
 
@@ -41,11 +40,10 @@ export default function GameScreen({ navigation }) {
         socket.on('refreshGame', (newAnims, s_cards, s_deck, s_thrown, turn_data) => {
             if (turn_data) setTurnPointer(turn_data);
             setCardsSelected([]);
-
             cards_ref.current = s_cards;
             thrown_ref.current = s_thrown;
             deck_ref.current = s_deck;
-
+            console.log(s_thrown);
             if (!newAnims || (Array.isArray(newAnims) && newAnims.length === 0)) {
                 setAnimTrigger(prev => !prev);
             } else {
@@ -97,7 +95,7 @@ export default function GameScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[stylesMain.container, { padding: 0, backgroundColor: '#0c370f' }]}>
             <ImageBackground
                 source={require('../../assets/pig-nose-svgrepo-com.png')}
                 resizeMode="repeat"
@@ -119,9 +117,8 @@ export default function GameScreen({ navigation }) {
             {thrown && (
                 <Card
                     type={thrown}
-                    onPress={() => console.log(thrown)}
+                    onPress={() => {}}
                     coords={[coords.thrown.x, coords.thrown.y]}
-                    style={{ zIndex: 50 }}
                 />
             )}
 
@@ -134,11 +131,8 @@ export default function GameScreen({ navigation }) {
                 />
             )}
 
-            {/* Action Buttons */}
-            {(cardsSelected.length > 0) && <Button title="Throw Selected Cards" onPress={handleThrowCard} />}
-
             {/* Other Players (Walls) */}
-            <OtherPlayers />
+            <OtherPlayers cards={cards} />
 
             {/* Player Hand (Bottom Scroll) */}
             <PlayerHand
@@ -156,6 +150,11 @@ export default function GameScreen({ navigation }) {
                         onFinish={() => removeAnim(uuid)}
                     />
                 ))}
+
+            {/* Action Buttons */}
+            {cardsSelected.length > 0 && (
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+            )}
         </View>
     );
 }

@@ -1,7 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, ScrollView, Pressable, Text, StyleSheet } from 'react-native';
-import Card from './card'; // Adjust path
-import { coords } from '../utils/gameUtils';
+import { useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Card from './card';
 
 export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
     const [isHandHovered, setIsHandHovered] = useState(false);
@@ -18,14 +17,13 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
     const scrollXRef = useRef(0);
     const contentWidthRef = useRef(0);
 
-    // Scroll Logic
     const updateArrowState = x => {
         setScrollState(prev => {
             const { contentWidth, containerWidth } = prev;
             return {
                 ...prev,
-                showLeft: x > 0,
-                showRight: x < contentWidth - containerWidth - 1,
+                showLeft: x > 5,
+                showRight: x < contentWidth - containerWidth - 5,
             };
         });
     };
@@ -33,15 +31,16 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
     const startScrolling = direction => {
         if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
         scrollIntervalRef.current = setInterval(() => {
-            const SCROLL_STEP = 15;
-            let newX = direction === 'left'
-                ? Math.max(0, scrollXRef.current - SCROLL_STEP)
-                : scrollXRef.current + SCROLL_STEP;
+            const SCROLL_STEP = 20;
+            let newX =
+                direction === 'left'
+                    ? Math.max(0, scrollXRef.current - SCROLL_STEP)
+                    : scrollXRef.current + SCROLL_STEP;
 
             if (scrollRef.current) {
                 scrollRef.current.scrollTo({ x: newX, animated: false });
             }
-        }, 50);
+        }, 30);
     };
 
     const stopScrolling = () => {
@@ -56,82 +55,99 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
     }, []);
 
     return (
-        <View style={styles.myHandContainer}>
-            {scrollState.showLeft && (
-                <Pressable
-                    style={[styles.arrowContainer, styles.arrowLeft]}
-                    onPressIn={() => startScrolling('left')}
-                    onPressOut={stopScrolling}
-                    onHoverIn={() => startScrolling('left')}
-                    onHoverOut={stopScrolling}
-                >
-                    <Text style={styles.arrowText}>{'<'}</Text>
-                </Pressable>
-            )}
-
+        <View style={styles.myHandContainer} pointerEvents="box-none">
             <ScrollView
                 ref={scrollRef}
                 horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={[styles.myHandContent, isHandHovered && { height: 1000 }]}
-                style={{ overflow: 'visible' }}
+                showsHorizontalScrollIndicator={Platform.OS === 'web'}
+                contentContainerStyle={[
+                    styles.myHandContent,
+                    isHandHovered && { paddingBottom: 0 },
+                ]}
+                style={{ flex: 1 }}
                 scrollEventThrottle={16}
                 onScroll={event => {
                     scrollXRef.current = event.nativeEvent.contentOffset.x;
                     updateArrowState(scrollXRef.current);
                 }}
-                onContentSizeChange={(newWidth) => {
-                    const oldWidth = contentWidthRef.current;
-                    if (newWidth > oldWidth && scrollRef.current) {
-                        stopScrolling();
-                        scrollRef.current.scrollToEnd({ animated: true });
-                    }
-                    contentWidthRef.current = newWidth;
+                onContentSizeChange={(w, h) => {
+                    contentWidthRef.current = w;
                     setScrollState(prev => ({
                         ...prev,
-                        contentWidth: newWidth,
-                        showRight: newWidth > prev.containerWidth,
+                        contentWidth: w,
+                        showRight: w > prev.containerWidth,
                     }));
                 }}
                 onLayout={event => {
+                    const width = event.nativeEvent.layout.width;
                     setScrollState(prev => ({
                         ...prev,
-                        containerWidth: event.nativeEvent.layout.width,
+                        containerWidth: width,
+                        showRight: prev.contentWidth > width,
                     }));
                 }}
             >
-                {cards?.map((c, i) => (
-                    <Pressable
-                        key={`0-${i}`}
-                        onHoverIn={() => { setIsHandHovered(true); setHoveredCardIndex(i); }}
-                        onHoverOut={() => { setIsHandHovered(false); setHoveredCardIndex(null); }}
-                        style={({ hovered }) => [{
-                            justifyContent: 'center',
-                            height: '100%',
-                            transition: 'all 0.3s ease-out',
-                            marginHorizontal: hovered ? 30 : 0,
-                            zIndex: hovered ? 100 : 1,
-                            transform: [{ translateY: hovered ? -100 : 0 }],
-                        }]}
-                    >
-                        <Card
-                            type={c}
+                {cards?.hand.map((c, i) => {
+                    const isHovered = hoveredCardIndex === i;
+                    return (
+                        <Pressable
+                            key={`hand-${i}`}
+                            onHoverIn={() => {
+                                setIsHandHovered(true);
+                                setHoveredCardIndex(i);
+                            }}
+                            onHoverOut={() => {
+                                setIsHandHovered(false);
+                                setHoveredCardIndex(null);
+                            }}
+                            onPressIn={() => {
+                                setIsHandHovered(true);
+                                setHoveredCardIndex(i);
+                            }}
+                            onPressOut={() => {
+                                setIsHandHovered(false);
+                                setHoveredCardIndex(null);
+                            }}
                             onPress={() => onSelectCard(i)}
-                            coords={[coords.card.x(i), coords.card.y(0)]}
-                            zoom={true}
-                            isChosen={selectedCards.includes(i)}
-                        />
-                    </Pressable>
-                ))}
+                            style={[styles.cardWrapper]}
+                        >
+                            <View
+                                style={[
+                                    styles.innerCardContainer,
+                                    isHovered && styles.innerCardContainerHovered,
+                                ]}
+                            >
+                                <Card
+                                    type={c}
+                                    onPress={() => onSelectCard(i)}
+                                    zoom={true}
+                                    isChosen={selectedCards.includes(i)}
+                                />
+                            </View>
+                        </Pressable>
+                    );
+                })}
             </ScrollView>
+
+            {scrollState.showLeft && (
+                <Pressable
+                    style={[styles.arrowContainer, styles.arrowLeft]}
+                    onPressIn={() => startScrolling('left')}
+                    onPressOut={stopScrolling}
+                    onHoverIn={() => Platform.OS === 'web' && startScrolling('left')}
+                    onHoverOut={() => Platform.OS === 'web' && stopScrolling()}
+                >
+                    <Text style={styles.arrowText}>{'<'}</Text>
+                </Pressable>
+            )}
 
             {scrollState.showRight && (
                 <Pressable
                     style={[styles.arrowContainer, styles.arrowRight]}
                     onPressIn={() => startScrolling('right')}
                     onPressOut={stopScrolling}
-                    onHoverIn={() => startScrolling('right')}
-                    onHoverOut={stopScrolling}
+                    onHoverIn={() => Platform.OS === 'web' && startScrolling('right')}
+                    onHoverOut={() => Platform.OS === 'web' && stopScrolling()}
                 >
                     <Text style={styles.arrowText}>{'>'}</Text>
                 </Pressable>
@@ -143,31 +159,48 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
 const styles = StyleSheet.create({
     myHandContainer: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 30,
         left: 0,
         right: 0,
-        height: 150,
-        flexDirection: 'row',
-        alignItems: 'center',
+        height: 200,
+        paddingHorizontal: 20,
+        zIndex: 100,
     },
     myHandContent: {
-        flex: 1,
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingBottom: 20,
+        paddingTop: 50,
+    },
+    cardWrapper: {
+        width: 100,
+        height: 140,
+        marginHorizontal: 5,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        height: 150,
+        zIndex: 1,
+    },
+
+    innerCardContainer: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    innerCardContainerHovered: {
+        zIndex: 100,
+        transform: [{ translateY: -60 }, { scale: 1.1 }],
     },
     arrowContainer: {
         position: 'absolute',
-        top: 0,
-        bottom: 0,
+        bottom: 20,
+        height: 140,
         width: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        zIndex: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        zIndex: 200,
     },
-    arrowLeft: { left: 0, borderTopRightRadius: 10, borderBottomRightRadius: 10 },
-    arrowRight: { right: 0, borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
-    arrowText: { color: 'white', fontSize: 24, fontWeight: 'bold' },
 });

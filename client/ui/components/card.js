@@ -1,62 +1,62 @@
 import { useState } from 'react';
-import { Image, Platform, Pressable, StyleSheet } from 'react-native';
+import { Image, Pressable, StyleSheet } from 'react-native';
+import { Shadow } from 'react-native-shadow-2';
 import { cards_data } from '../../utils';
 
-export default function Card({ type, onPress, style, zoom, isChosen }) {
+export default function Card({ type, onPress, style, zoom, isChosen, coords }) {
     const card = cards_data[type];
-    if (!card) return null;
-    const [isHovered, setIsHovered] = useState(false); // 2. Add hover state
+    const [isHovered, setIsHovered] = useState(false);
 
     if (!card) return null;
+    const topleft = coords
+        ? {
+              top: coords[1],
+              left: coords[0],
+              transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+          }
+        : {};
 
     return (
         <Pressable
             onPress={onPress}
-            // 3. Apply conditional style
-            style={[
-                styles.card, // Base style
-                style, // Parent style (from GameScreen)
-                isHovered && styles.hoveredCard,
-                isChosen && styles.chosenCard // Apply hover style when true
-            ]}
-            // 4. Add event handlers to update state
-            onHoverIn={() => {
-                // Only set hover state if the zoom prop is true
-                if (zoom) {
-                    setIsHovered(true);
-                }
-            }}
+            style={[styles.cardWrapper, style, isHovered && styles.hoveredTransform, topleft]}
+            onHoverIn={() => zoom && setIsHovered(true)}
             onHoverOut={() => setIsHovered(false)}
         >
-            <Image source={card.img} resizeMode="contain" style={styles.image} />
+            <Shadow
+                disabled={!isChosen}
+                startColor={'#dcea12'}
+                endColor={'#dcea1200'}
+                distance={isChosen ? 15 : 0}
+                offset={[0, 0]}
+                paintInside={false}
+                style={styles.shadowContainer}
+            >
+                <Image source={card.img} resizeMode="contain" style={styles.image} />
+            </Shadow>
         </Pressable>
     );
 }
 
 const styles = StyleSheet.create({
-    card: {
+    cardWrapper: {
         width: 100,
         height: 150,
         margin: 5,
-        transitionProperty: 'transform',
-        transitionDuration: '0.1s',
+        position: 'absolute',
+        backgroundColor: 'transparent',
     },
-    image: {
+    shadowContainer: {
         width: '100%',
         height: '100%',
+        borderRadius: 0,
     },
-    hoveredCard: {
-        transform: [
-            { scale: 2 }, // Make it 15% bigger
-            { translateY: -50 }, // Lift it up by 10 pixels
-        ],
-        zIndex: 1000, // CRITICAL: Make sure it's on top of other cards
-        elevation: (Platform.OS !== 'ios') ? 1000 : 0
+    image: {
+        width: 100,
+        height: 150,
     },
-    chosenCard: {
-        shadowColor: '#dcea12ff',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 5, 
-    }
+    hoveredTransform: {
+        transform: [{ scale: 1.1 }, { translateY: -20 }],
+        zIndex: 1000,
+    },
 });
