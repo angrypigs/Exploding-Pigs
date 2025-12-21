@@ -36,11 +36,7 @@ export default function gameHandler(io, socket, rooms) {
             console.log(cards)
             let actions = cardsValidation(room, socket.id, cards);
             if (actions !== null) {
-                const playerCards = room.players.get(socket.id).cards;
-                const sortedIndices = [...cardsIndexes].sort((a, b) => b - a);
-                for (const c of sortedIndices) {
-                    playerCards.splice(c, 1);
-                }
+                room.remove_cards(socket.id, cardsIndexes);
                 const turn_data = room.handle_queue();
                 for (const key of room.players.keys()) {
                     const res = room.serve_cards(key);

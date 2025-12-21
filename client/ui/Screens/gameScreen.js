@@ -40,11 +40,10 @@ export default function GameScreen({ navigation }) {
         socket.on('refreshGame', (newAnims, s_cards, s_deck, s_thrown, turn_data) => {
             if (turn_data) setTurnPointer(turn_data);
             setCardsSelected([]);
-            console.log(s_cards);
             cards_ref.current = s_cards;
             thrown_ref.current = s_thrown;
             deck_ref.current = s_deck;
-
+            console.log(s_thrown);
             if (!newAnims || (Array.isArray(newAnims) && newAnims.length === 0)) {
                 setAnimTrigger(prev => !prev);
             } else {
@@ -96,7 +95,7 @@ export default function GameScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[stylesMain.container, { padding: 0, backgroundColor: '#0c370f' }]}>
             <ImageBackground
                 source={require('../../assets/pig-nose-svgrepo-com.png')}
                 resizeMode="repeat"
@@ -118,9 +117,8 @@ export default function GameScreen({ navigation }) {
             {thrown && (
                 <Card
                     type={thrown}
-                    onPress={() => console.log(thrown)}
+                    onPress={() => {}}
                     coords={[coords.thrown.x, coords.thrown.y]}
-                    style={{ zIndex: 50 }}
                 />
             )}
 
@@ -131,11 +129,6 @@ export default function GameScreen({ navigation }) {
                     coords={[coords.deck.x, coords.deck.y]}
                     zoom={false}
                 />
-            )}
-
-            {/* Action Buttons */}
-            {cardsSelected.length > 0 && (
-                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
             )}
 
             {/* Other Players (Walls) */}
@@ -157,6 +150,11 @@ export default function GameScreen({ navigation }) {
                         onFinish={() => removeAnim(uuid)}
                     />
                 ))}
+
+            {/* Action Buttons */}
+            {cardsSelected.length > 0 && (
+                <Button title="Throw Selected Cards" onPress={handleThrowCard} />
+            )}
         </View>
     );
 }

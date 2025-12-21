@@ -15,6 +15,12 @@ cd ../server
 npm install
 ```
 
+### Setting development env
+
+```shell
+py dev_env.py
+```
+
 ## Loading
 
 ### Server

@@ -3,12 +3,9 @@ import { Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
 export const coords = {
-    thrown: { x: width / 2 + 100, y: height - 100 },
-    deck: { x: width / 2, y: height / 2 },
-    card: {
-        x: c => width / 2 - 200 + c * 50,
-        y: p => height - 130 * (p + 1),
-    },
+    thrown: { x: width / 2 + 55, y: height / 2 },
+    deck: { x: width / 2 - 55, y: height / 2 },
+    hand: { x: width / 2, y: height - 100 },
 };
 
 let tempCoords = [
@@ -34,9 +31,8 @@ const playerOffsets = {
 };
 
 export function coordsAnimHandler(target) {
-    if (target === 'thrown' || target === 'deck') return { ...coords[target] };
-    let points = target.split(':').map(Number);
-    return { x: coords.card.x(0), y: coords.card.y(points[0]) };
+    if (target === 'thrown' || target === 'deck' || target === 'hand') return { ...coords[target] };
+    return { x: width / 2, y: 200 };
 }
 
 export const generateWallCircles = cards => {
