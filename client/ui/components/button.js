@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRef } from 'react';
 import { Animated, Text, TouchableOpacity } from 'react-native';
 
-import { stylesButton } from '../../styles/style_custom_components';
+import { stylesButton } from '../../styles/stylesCustomComponents';
 
 export function Button({ title, onPress }) {
     const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -31,7 +31,7 @@ export function Button({ title, onPress }) {
                 onPressOut={handlePressOut}
             >
                 <LinearGradient
-                    colors={['#6a11cb', '#2575fc']}
+                    colors={['#178f23ff', '#3bfc25ff']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={stylesButton.button}

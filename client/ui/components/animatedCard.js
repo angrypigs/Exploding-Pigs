@@ -8,7 +8,7 @@ import Animated, {
     withDelay,
     withTiming,
 } from 'react-native-reanimated';
-import { cards_data } from '../../utils';
+import { cards_data } from '../../utils/gameUtils';
 
 export default function AnimatedCard({ animData, onFinish }) {
     const w = animData.width ?? 100;
