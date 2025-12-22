@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet } from 'react-native';
 import { Shadow } from 'react-native-shadow-2';
-import { cards_data } from '../../utils';
+import { cards_data } from '../../utils/gameUtils';
 
 export default function Card({ type, onPress, style, zoom, isChosen, coords }) {
     const card = cards_data[type];
@@ -25,9 +25,9 @@ export default function Card({ type, onPress, style, zoom, isChosen, coords }) {
         >
             <Shadow
                 disabled={!isChosen}
-                startColor={'#dcea12'}
+                startColor={'#44ea12ff'}
                 endColor={'#dcea1200'}
-                distance={isChosen ? 15 : 0}
+                distance={isChosen ? 10 : 0}
                 offset={[0, 0]}
                 paintInside={false}
                 style={styles.shadowContainer}

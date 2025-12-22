@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Card from './card';
 
 export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
@@ -129,7 +129,7 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
                 })}
             </ScrollView>
 
-            {scrollState.showLeft && (
+            {/* {scrollState.showLeft && (
                 <Pressable
                     style={[styles.arrowContainer, styles.arrowLeft]}
                     onPressIn={() => startScrolling('left')}
@@ -151,17 +151,14 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
                 >
                     <Text style={styles.arrowText}>{'>'}</Text>
                 </Pressable>
-            )}
+            )} */}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     myHandContainer: {
-        position: 'absolute',
-        bottom: 30,
-        left: 0,
-        right: 0,
+        position: 'relative',
         height: 200,
         paddingHorizontal: 20,
         zIndex: 100,
@@ -171,12 +168,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'flex-end',
         paddingBottom: 20,
-        paddingTop: 50,
+        paddingTop: 20,
     },
     cardWrapper: {
         width: 100,
         height: 140,
-        marginHorizontal: 5,
+        marginHorizontal: 0,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,

@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { SocketContext } from '../../contexts/socketContext';
 
-import { stylesMain } from '../../styles/style_main';
+import { stylesMain } from '../../styles/stylesMain';
 import { Button } from '../components/button';
 import { PlayerList } from '../components/player_list';
 

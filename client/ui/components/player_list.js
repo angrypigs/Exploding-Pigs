@@ -1,6 +1,6 @@
 import { FlatList, Text, View } from 'react-native';
 
-import { stylesPlayerList } from '../../styles/style_custom_components';
+import { stylesPlayerList } from '../../styles/stylesCustomComponents';
 
 export function PlayerList({ players }) {
     const renderItem = ({ item }) => (

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { generateWallCircles } from '../utils/gameUtils';
+import { generateWallCircles } from '../../utils/gameUtils';
 
 const CircleWithLabel = ({ x, y, size, color, label }) => {
     return (

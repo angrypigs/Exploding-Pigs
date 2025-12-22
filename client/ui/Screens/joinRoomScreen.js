@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
 import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SocketContext } from '../../contexts/socketContext';
-import { stylesMain } from '../../styles/style_main';
+import { stylesMain } from '../../styles/stylesMain';
 import { isGameCode } from '../../utils';
 import { Button } from '../components/button';
 
