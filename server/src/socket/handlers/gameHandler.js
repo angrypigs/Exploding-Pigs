@@ -4,11 +4,11 @@ export default function gameHandler(io, socket, rooms) {
     socket.on('takeCard', code => {
         const room = rooms.get(code);
         if (room && room.validate_player(socket.id)) {
-            const action = room.take_card_top(socket.id);
-            console.log(`Action from ${socket.id}: ${action}`);
-            if (action) {
+            const actions = room.take_card_top(socket.id);
+            if (actions) {
                 const turn_data = room.handle_queue();
                 for (const key of room.players.keys()) {
+                    const action = actions[key] ?? actions['other'];
                     const res = room.serve_cards(key);
                     // room.print_game()
                     io.to(key).emit(
@@ -32,19 +32,20 @@ export default function gameHandler(io, socket, rooms) {
     socket.on('throwCard', (code, cardsIndexes) => {
         const room = rooms.get(code);
         if (room && room.validate_player(socket.id)) {
-            let cards = room.indexes_to_cards(socket.id, cardsIndexes)
-            console.log(cards)
+            let cards = room.indexes_to_cards(socket.id, cardsIndexes);
+            console.log(cards);
             let actions = cardsValidation(room, socket.id, cards);
             if (actions !== null) {
                 room.remove_cards(socket.id, cardsIndexes);
                 const turn_data = room.handle_queue();
                 for (const key of room.players.keys()) {
+                    const action = actions[key] ?? actions['other'];
                     const res = room.serve_cards(key);
                     console.log(actions);
                     // room.print_game()
                     io.to(key).emit(
                         'refreshGame',
-                        actions,
+                        action,
                         res['cards'],
                         res['deck'],
                         res['thrown'],

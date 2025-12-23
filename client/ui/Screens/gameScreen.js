@@ -11,6 +11,7 @@ import { Button } from '../components/button';
 import Card from '../components/card';
 import OtherPlayers from '../components/OtherPlayers';
 import PlayerHand from '../components/PlayerHand';
+import ShowCardsPopup from '../components/popups/showCardsPopup';
 
 export default function GameScreen({ navigation }) {
     const socket = useContext(SocketContext);
@@ -25,34 +26,29 @@ export default function GameScreen({ navigation }) {
     const [animTrigger, setAnimTrigger] = useState(false);
     const [turnPointer, setTurnPointer] = useState(null);
 
+    const [popupFlag, setPopupFlag] = useState('peek');
+    const [popupData, setPopupData] = useState(['1', '2', '6']);
+
     const cards_ref = useRef({});
     const thrown_ref = useRef(null);
     const deck_ref = useRef(null);
 
     useEffect(() => {
-        // 1. Blokada dla Web i nawigacji (to zostaje bez zmian)
         const unsubscribeNav = navigation.addListener('beforeRemove', e => {
             e.preventDefault();
         });
-
-        // 2. Blokada sprzętowa dla Androida (NOWA METODA)
         const onBackPress = () => {
             return true;
         };
-
         let backHandlerSubscription;
-
         if (Platform.OS === 'android') {
-            // addEventListener zwraca teraz obiekt subskrypcji
             backHandlerSubscription = BackHandler.addEventListener(
                 'hardwareBackPress',
                 onBackPress
             );
         }
-
         return () => {
             unsubscribeNav();
-            // Sprawdzamy czy subskrypcja istnieje i usuwamy ją metodą .remove()
             if (backHandlerSubscription) {
                 backHandlerSubscription.remove();
             }
@@ -91,6 +87,9 @@ export default function GameScreen({ navigation }) {
                             targetY: c_end.y,
                             type: a[3],
                         };
+                    } else if (a[0] === 'peek') {
+                        setPopupData(a[1]);
+                        setPopupFlag('peek');
                     }
                 }
                 setAnims(prev => ({ ...(prev ?? {}), ...tempAnims }));
@@ -189,6 +188,15 @@ export default function GameScreen({ navigation }) {
                     onSelectCard={handleSelectCard}
                 />
             </View>
+
+            {popupFlag === 'peek' && (
+                <ShowCardsPopup
+                    cards={popupData}
+                    onExit={() => {
+                        setPopupFlag(null);
+                    }}
+                />
+            )}
         </View>
     );
 }

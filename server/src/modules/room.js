@@ -181,7 +181,7 @@ export class Room {
         for (const c of sortedIndices) {
             const removedCard = playerCards.splice(c, 1)[0][0];
             this.thrown.push(removedCard);
-        }   
+        }
     }
 
     is_player_turn(player_id) {
@@ -196,10 +196,14 @@ export class Room {
             this.save_state();
             this.turns--;
             this.negable = false;
-            this.players.get(player_id).cards.push([this.deck.pop(), true]);
-            let action = [['move', 'deck', 'hand', '0']];
-            this.save_state_action(action);
-            return action;
+            const card = this.deck.pop();
+            this.players.get(player_id).cards.push([card, true]);
+            let actions = {
+                [player_id]: [['move', 'deck', 'hand', card]],
+                other: [['move', 'deck', player_id, '0']],
+            };
+            this.save_state_action(actions);
+            return actions;
         }
         return null;
     }
@@ -211,14 +215,31 @@ export class Room {
             this.turns--;
             this.negable = false;
             this.players.get(player_id).cards.push([this.deck.shift(), true]);
-            let action = [['move', 'deck', 'hand', '0']];
+            let action = {
+                [player_id]: [['move', 'deck', 'hand', card]],
+                other: [['move', 'deck', player_id, '0']],
+            };
             this.save_state_action(action);
             return action;
         }
         return null;
     }
 
-    see_n_cards_top(player_id, n) {}
+    see_n_cards_top(player_id, n) {
+        console.log('shuffle');
+        if (this.is_player_turn(player_id) && this.turns > 0) {
+            this.save_state();
+            this.negable = false;
+            shuffleArray(this.deck);
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', `9_${n}`], ['peek', this.deck.slice(-n).reverse()]],
+                other: [['move', player_id, 'thrown', `9_${n}`]],
+            };
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
 
     mix_n_cards_top(player_id, n) {}
 
@@ -228,7 +249,10 @@ export class Room {
             this.save_state();
             this.turns--;
             this.negable = true;
-            let action = [['move', 'hand', 'thrown', '3']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '3']],
+                other: [['move', player_id, 'thrown', '3']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -241,7 +265,10 @@ export class Room {
             this.save_state();
             this.turns = 0;
             this.negable = true;
-            let action = [['move', 'hand', 'thrown', '4']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '4']],
+                other: [['move', player_id, 'thrown', '4']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -254,7 +281,10 @@ export class Room {
             this.save_state();
             this.negable = true;
             shuffleArray(this.deck);
-            let action = [['move', 'hand', 'thrown', '8']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '8']],
+                other: [['move', player_id, 'thrown', '8']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -268,7 +298,10 @@ export class Room {
             this.negable = true;
             this.turns--;
             this.queue_dir = !this.queue_dir;
-            let action = [['move', 'hand', 'thrown', '5']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '5']],
+                other: [['move', player_id, 'thrown', '5']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -286,7 +319,10 @@ export class Room {
                 this.turns_temp = n;
             }
             this.turns--;
-            let action = [['move', 'hand', 'thrown', '6']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '6']],
+                other: [['move', player_id, 'thrown', '6']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -305,7 +341,10 @@ export class Room {
             shuffleArray(this.deck);
             let bombs = Array(old_len - this.deck.length).fill('1');
             this.deck = [...this.deck, ...bombs];
-            let action = [['move', 'hand', 'thrown', '17']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '17']],
+                other: [['move', player_id, 'thrown', '17']],
+            };
             this.save_state_action(action);
             return action;
         }
@@ -322,7 +361,10 @@ export class Room {
             shuffleArray(this.deck);
             let bombs = Array(old_len - this.deck.length).fill('1');
             this.deck = [...bombs, ...this.deck];
-            let action = [['move', 'hand', 'thrown', '18']];
+            let action = {
+                [player_id]: [['move', 'hand', 'thrown', '18']],
+                other: [['move', player_id, 'thrown', '18']],
+            };
             this.save_state_action(action);
             return action;
         }
