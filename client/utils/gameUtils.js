@@ -72,6 +72,10 @@ export const cards_data = {
     },
 };
 
+export function isGameCode(str) {
+    return str.length === 5 && /^\d{5}$/.test(str);
+}
+
 export const coords = {
     thrown: { x: width / 2 + 55, y: height / 2 },
     deck: { x: width / 2 - 55, y: height / 2 },

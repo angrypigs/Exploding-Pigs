@@ -10,6 +10,7 @@ export default function Card({ type, onPress, style, zoom, isChosen, coords }) {
     if (!card) return null;
     const topleft = coords
         ? {
+              position: 'absolute',
               top: coords[1],
               left: coords[0],
               transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 150,
         margin: 5,
-        position: 'absolute',
+        position: 'relative',
         backgroundColor: 'transparent',
     },
     shadowContainer: {

@@ -33,7 +33,7 @@ export default function AnimatedCard({ animData, onFinish }) {
 
     useEffect(() => {
         const delay = animData.delay ?? 0;
-        const duration = 300;
+        const duration = 500;
         opacity.value = withTiming(1, { duration: 100 });
         x.value = withDelay(
             delay,

@@ -1,17 +1,17 @@
+import 'dotenv/config';
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import socketHandler from './src/socket/index.js';
-import 'dotenv/config';
 
 const app = express();
 
 app.get('/test', (req, res) => {
-  res.send({
-    status: 'Serwer żyje!',
-    timestamp: new Date().toISOString(),
-    message: 'Jeśli to widzisz na telefonie, połączenie działa!'
-  });
+    res.send({
+        status: 'Serwer żyje!',
+        timestamp: new Date().toISOString(),
+        message: 'Jeśli to widzisz na telefonie, połączenie działa!',
+    });
 });
 
 const server = http.createServer(app);

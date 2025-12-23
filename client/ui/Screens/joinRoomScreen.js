@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SocketContext } from '../../contexts/socketContext';
 import { stylesMain } from '../../styles/stylesMain';
-import { isGameCode } from '../../utils';
+import { isGameCode } from '../../utils/gameUtils';
 import { Button } from '../components/button';
 
 export default function JoinRoomScreen({ navigation }) {

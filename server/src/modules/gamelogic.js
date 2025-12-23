@@ -14,6 +14,12 @@ export function cardsValidation(room, player_id, cardsIdx) {
                     return room.attack_n_times_next(player_id, 2);
                 case '8':
                     return room.shuffle_deck(player_id);
+                case '9_3':
+                    return room.see_n_cards_top(player_id, 3);
+                case '9_4':
+                    return room.see_n_cards_top(player_id, 4);
+                case '9_5':
+                    return room.see_n_cards_top(player_id, 5);
                 case '17':
                     return room.all_bombs_top(player_id);
                 case '18':
@@ -27,4 +33,3 @@ export function cardsValidation(room, player_id, cardsIdx) {
             return null;
     }
 }
-
