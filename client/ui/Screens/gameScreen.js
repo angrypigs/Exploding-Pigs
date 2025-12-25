@@ -9,8 +9,8 @@ import { coords, coordsAnimHandler } from '../../utils/gameUtils';
 import AnimatedCard from '../components/animatedCard';
 import { Button } from '../components/button';
 import Card from '../components/card';
-import OtherPlayers from '../components/OtherPlayers';
 import PlayerHand from '../components/PlayerHand';
+import PlayerList from '../components/PlayerList';
 import ChangeCardsPopup from '../components/popups/changeCardsPopup';
 import ShowCardsPopup from '../components/popups/showCardsPopup';
 
@@ -68,10 +68,10 @@ export default function GameScreen({ navigation }) {
         socket.on('refreshGame', (newAnims, s_cards, s_deck, s_thrown, turn_data) => {
             if (turn_data) setTurnPointer(turn_data);
             setCardsSelected([]);
+            console.log(s_cards);
             cards_ref.current = s_cards;
             thrown_ref.current = s_thrown;
             deck_ref.current = s_deck;
-            console.log(s_thrown);
             if (!newAnims || (Array.isArray(newAnims) && newAnims.length === 0)) {
                 setAnimTrigger(prev => !prev);
             } else {
@@ -128,6 +128,26 @@ export default function GameScreen({ navigation }) {
         });
     };
 
+    const myPublicId = cards?.['0']?.publicId;
+    const currentTurnPublicId = turnPointer?.[2];
+
+    const isMyTurn = currentTurnPublicId
+        ? myPublicId === currentTurnPublicId
+        : turnPointer?.[0] === 0;
+
+    let turnText = '';
+    if (turnPointer) {
+        if (isMyTurn) {
+            turnText = `Your turn! (${turnPointer[1]})`;
+        } else {
+            const opponentId = Object.keys(cards || {}).find(
+                key => cards[key].publicId === currentTurnPublicId
+            );
+            const opponentName = cards[opponentId]?.nickname || `Gracz ${turnPointer[0]}`;
+            turnText = `Turn: ${opponentName} (${turnPointer[1]})`;
+        }
+    }
+
     return (
         <View style={[stylesMain.container, { padding: 0, backgroundColor: '#0c370f' }]}>
             <ImageBackground
@@ -137,14 +157,35 @@ export default function GameScreen({ navigation }) {
             />
 
             {/* Game Info HUD */}
-            <View style={stylesMain.testGame}>
-                <Text style={stylesMain.text}>Room code: {roomCode}</Text>
-                <Text style={stylesMain.text}>Nickname: {nickname}</Text>
+            <View style={styles.topHud}>
+                {/* Lewa strona: Room & Nick */}
+                <View style={styles.hudContainer}>
+                    <Text style={styles.hudLabel}>Room:</Text>
+                    <Text style={styles.hudText}>{roomCode}</Text>
+                    <View style={styles.separator} />
+                    <Text style={styles.hudText}>{nickname}</Text>
+                </View>
+
+                {/* Prawa strona: Tura */}
                 {turnPointer && (
-                    <Text style={stylesMain.text}>
-                        Turn for player {turnPointer[0]} ({turnPointer[1]} turns)
-                    </Text>
+                    <View style={[styles.hudContainer, isMyTurn && styles.activeTurnContainer]}>
+                        <Text style={[styles.hudText, isMyTurn && styles.activeTurnText]}>
+                            {turnText}
+                        </Text>
+                    </View>
                 )}
+            </View>
+            <View style={styles.playerListBox}>
+                <PlayerList
+                    cards={cards}
+                    turnPointer={turnPointer}
+                    showSelf={true}
+                    vertical={false}
+                    onSelect={player => {
+                        setPopupData(player.hand);
+                        setPopupFlag('playerCards');
+                    }}
+                />
             </View>
 
             {/* Central Table */}
@@ -164,9 +205,6 @@ export default function GameScreen({ navigation }) {
                     zoom={false}
                 />
             )}
-
-            {/* Other Players (Walls) */}
-            <OtherPlayers cards={cards} />
 
             {/* Animation Overlay */}
             {anims &&
@@ -193,12 +231,23 @@ export default function GameScreen({ navigation }) {
                 />
             </View>
 
+            {popupFlag === 'playerCards' && (
+                <ShowCardsPopup
+                    cards={popupData}
+                    onExit={() => {
+                        setPopupFlag(null);
+                    }}
+                    title={"See player's cards"}
+                />
+            )}
+
             {popupFlag === 'peekFuture' && (
                 <ShowCardsPopup
                     cards={popupData}
                     onExit={() => {
                         setPopupFlag(null);
                     }}
+                    title={'Peek top cards'}
                 />
             )}
 
@@ -226,6 +275,62 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+
+    topHud: {
+        position: 'absolute',
+        top: 45,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        zIndex: 20,
+    },
+    hudContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        borderRadius: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    hudLabel: {
+        color: '#aaa',
+        fontSize: 12,
+        marginRight: 4,
+        fontWeight: '600',
+    },
+    hudText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    separator: {
+        width: 1,
+        height: 14,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        marginHorizontal: 10,
+    },
+    activeTurnContainer: {
+        borderColor: '#fbbf24',
+        borderWidth: 1,
+        backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    },
+    activeTurnText: {
+        color: '#fbbf24',
+    },
+
+    playerListBox: {
+        position: 'absolute',
+        top: 90,
+        left: 0,
+        right: 0,
+        height: 120,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
     footerBox: {
         position: 'absolute',
         bottom: 0,

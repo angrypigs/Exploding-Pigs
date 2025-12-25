@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#156915ff',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 30,
+        gap: 10,
     },
     header: {
         position: 'absolute',

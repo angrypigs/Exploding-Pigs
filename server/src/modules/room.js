@@ -175,7 +175,7 @@ export class Room {
             this.turns_temp = 0;
             this.queue_p_temp = -1;
         }
-        return [this.queue_p, this.turns];
+        return [this.queue_p, this.turns, this.queue[this.queue_p][1]];
     }
 
     remove_cards(player_id, indexes) {
