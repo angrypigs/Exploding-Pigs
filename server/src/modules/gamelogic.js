@@ -20,6 +20,12 @@ export function cardsValidation(room, player_id, cardsIdx) {
                     return room.see_n_cards_top(player_id, 4);
                 case '9_5':
                     return room.see_n_cards_top(player_id, 5);
+                case '10_3':
+                    return room.mix_n_cards_top(player_id, 3);
+                case '10_4':
+                    return room.mix_n_cards_top(player_id, 4);
+                case '10_5':
+                    return room.mix_n_cards_top(player_id, 5);
                 case '17':
                     return room.all_bombs_top(player_id);
                 case '18':
@@ -32,4 +38,13 @@ export function cardsValidation(room, player_id, cardsIdx) {
         default:
             return null;
     }
+}
+
+export function actionsValidation(room, player_id, action_name, data) {
+    switch (action_name) {
+        case 'changeFuture':
+            return room.handle_cards_mix(player_id, data);
+        default:
+            return null;
+    } 
 }

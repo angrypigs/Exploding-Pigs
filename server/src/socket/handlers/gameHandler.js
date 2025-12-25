@@ -1,4 +1,4 @@
-import { cardsValidation } from '../../modules/gamelogic.js';
+import { cardsValidation, actionsValidation } from '../../modules/gamelogic.js';
 
 export default function gameHandler(io, socket, rooms) {
     socket.on('takeCard', code => {
@@ -41,8 +41,33 @@ export default function gameHandler(io, socket, rooms) {
                 for (const key of room.players.keys()) {
                     const action = actions[key] ?? actions['other'];
                     const res = room.serve_cards(key);
-                    console.log(actions);
                     // room.print_game()
+                    io.to(key).emit(
+                        'refreshGame',
+                        action,
+                        res['cards'],
+                        res['deck'],
+                        res['thrown'],
+                        turn_data
+                    );
+                }
+            } else {
+                socket.emit('refreshGame', false);
+            }
+        } else {
+            socket.emit('refreshGame', null);
+        }
+    });
+
+    socket.on('gameAction', (code, actionName, actionData) => {
+        const room = rooms.get(code);
+        if (room && room.validate_player(socket.id)) {
+            let actions = actionsValidation(room, socket.id, actionName, actionData);
+            if (actions !== null) {
+                const turn_data = room.handle_queue();
+                for (const key of room.players.keys()) {
+                    const action = actions[key] ?? actions['other'];
+                    const res = room.serve_cards(key);
                     io.to(key).emit(
                         'refreshGame',
                         action,

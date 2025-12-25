@@ -15,10 +15,26 @@ export default function socketHandler(io, rooms) {
                     if (room.queue_dir) room.queue_p = room.queue_p % room.queue.length;
                     else room.queue_p = (room.queue_p - 1 + room.queue.length) % room.queue.length;
                     console.log(`Usunięto gracza ${socket.id} z pokoju ${code}`);
-                    io.to(code).emit('refreshRoom', room.get_player_list());
                     if (room.players.size === 0) {
                         rooms.delete(code);
                         console.log(`Pokój ${code} został usunięty, bo nie ma graczy`);
+                    } else {
+                        if (room.room_closed) {
+                            const turn_data = room.handle_queue();
+                            for (const key of room.players.keys()) {
+                                const res = room.serve_cards(key);
+                                io.to(key).emit(
+                                    'refreshGame',
+                                    [],
+                                    res['cards'],
+                                    res['deck'],
+                                    res['thrown'],
+                                    turn_data
+                                );
+                            }
+                        } else {
+                            io.to(code).emit('refreshRoom', room.get_player_list());
+                        }
                     }
                     break;
                 }

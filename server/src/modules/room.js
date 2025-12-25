@@ -36,6 +36,9 @@ export class Room {
         this.negable = false;
         /**Actions transaction flag */
         this.change_flag = true;
+
+        this.expected_action = null;
+        this.expected_action_players = [];
     }
 
     add_player(id, nickname, name) {
@@ -188,7 +191,7 @@ export class Room {
         return this.queue[this.queue_p][0] === player_id;
     }
 
-    // ? ====== NOTE: PLAYER ACTIONS ======
+    // ? ====== NOTE: PLAYER CARDS ACTIONS ======
 
     take_card_top(player_id) {
         console.log('take top');
@@ -226,13 +229,15 @@ export class Room {
     }
 
     see_n_cards_top(player_id, n) {
-        console.log('shuffle');
+        console.log(`see ${n} cards`);
         if (this.is_player_turn(player_id) && this.turns > 0) {
             this.save_state();
             this.negable = false;
-            shuffleArray(this.deck);
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', `9_${n}`], ['peek', this.deck.slice(-n).reverse()]],
+                [player_id]: [
+                    ['move', 'hand', 'thrown', `9_${n}`],
+                    ['peekFuture', this.deck.slice(-n).reverse()],
+                ],
                 other: [['move', player_id, 'thrown', `9_${n}`]],
             };
             this.save_state_action(action);
@@ -241,7 +246,25 @@ export class Room {
         return null;
     }
 
-    mix_n_cards_top(player_id, n) {}
+    mix_n_cards_top(player_id, n) {
+        console.log(`change ${n} cards`);
+        if (this.is_player_turn(player_id) && this.turns > 0) {
+            this.save_state();
+            this.negable = false;
+            this.expected_action = 'changeFuture';
+            this.expected_action_players = [player_id];
+            let action = {
+                [player_id]: [
+                    ['move', 'hand', 'thrown', `10_${n}`],
+                    ['changeFuture', this.deck.slice(-n).reverse()],
+                ],
+                other: [['move', player_id, 'thrown', `10_${n}`]],
+            };
+            this.save_state_action(action);
+            return action;
+        }
+        return null;
+    }
 
     skip_turn(player_id) {
         console.log('skip');
@@ -376,4 +399,23 @@ export class Room {
     take_random_from_player(player_id) {}
 
     nonono(player_id) {}
+
+    // ? ====== NOTE: PLAYERS OTHER ACTIONS ======
+
+    handle_cards_mix(player_id, indexes) {
+        console.log(`mixing cards with indexes ${indexes}`);
+        this.save_state();
+        const cutoff = this.deck.length - indexes.length;
+        const bottomCards = this.deck.slice(0, cutoff);
+        const topCardsOrig = this.deck.slice(cutoff);
+        console.log(`top cards: ${topCardsOrig}`);
+        const topCards = indexes.map(index => topCardsOrig[index]);
+        console.log(`top cards after: ${topCards}`);
+        this.deck = [...bottomCards, ...topCards];
+        let action = {
+            other: [],
+        };
+        this.save_state_action(action);
+        return action;
+    }
 }

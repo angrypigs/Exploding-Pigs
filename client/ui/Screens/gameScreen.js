@@ -11,6 +11,7 @@ import { Button } from '../components/button';
 import Card from '../components/card';
 import OtherPlayers from '../components/OtherPlayers';
 import PlayerHand from '../components/PlayerHand';
+import ChangeCardsPopup from '../components/popups/changeCardsPopup';
 import ShowCardsPopup from '../components/popups/showCardsPopup';
 
 export default function GameScreen({ navigation }) {
@@ -26,8 +27,8 @@ export default function GameScreen({ navigation }) {
     const [animTrigger, setAnimTrigger] = useState(false);
     const [turnPointer, setTurnPointer] = useState(null);
 
-    const [popupFlag, setPopupFlag] = useState('peek');
-    const [popupData, setPopupData] = useState(['1', '2', '6']);
+    const [popupFlag, setPopupFlag] = useState(null);
+    const [popupData, setPopupData] = useState(null);
 
     const cards_ref = useRef({});
     const thrown_ref = useRef(null);
@@ -87,9 +88,12 @@ export default function GameScreen({ navigation }) {
                             targetY: c_end.y,
                             type: a[3],
                         };
-                    } else if (a[0] === 'peek') {
+                    } else if (a[0] === 'peekFuture') {
                         setPopupData(a[1]);
-                        setPopupFlag('peek');
+                        setPopupFlag('peekFuture');
+                    } else if (a[0] === 'changeFuture') {
+                        setPopupData(a[1]);
+                        setPopupFlag('changeFuture');
                     }
                 }
                 setAnims(prev => ({ ...(prev ?? {}), ...tempAnims }));
@@ -189,11 +193,23 @@ export default function GameScreen({ navigation }) {
                 />
             </View>
 
-            {popupFlag === 'peek' && (
+            {popupFlag === 'peekFuture' && (
                 <ShowCardsPopup
                     cards={popupData}
                     onExit={() => {
                         setPopupFlag(null);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'changeFuture' && (
+                <ChangeCardsPopup
+                    cards={popupData}
+                    onExit={indexes => {
+                        setPopupFlag(null);
+                        indexes.reverse();
+                        console.log(indexes);
+                        socket.emit('gameAction', roomCode, 'changeFuture', indexes);
                     }}
                 />
             )}

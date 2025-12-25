@@ -18,7 +18,7 @@ export default function AnimatedCard({ animData, onFinish }) {
     const x = useSharedValue(animData.x);
     const y = useSharedValue(animData.y);
 
-    const opacity = useSharedValue(0);
+    const opacity = useSharedValue(1);
 
     const style = useAnimatedStyle(() => ({
         position: 'absolute',
