@@ -2,8 +2,8 @@ import crypto from 'crypto';
 import { data, rotateArray, shuffleArray } from '../utils.js';
 
 export class Room {
-    constructor(max_players) {
-        this.max_players = max_players;
+    constructor(maxPlayers) {
+        this.maxPlayers = maxPlayers;
         this.deck = [];
         /**Used cards array */
         this.thrown = [];
@@ -15,34 +15,34 @@ export class Room {
          * - cards: array of two-element arrays [<cardId>, <visible/not>]
          */
         this.players = new Map();
-        this.room_closed = false;
+        this.roomClosed = false;
 
-        /**Determines the game order, consists of socket ID-s */
+        /**Determines the game order, consists of socket ID-s (strings) */
         this.queue = [];
         /**Points onto queue ID of player that currently has action to do */
-        this.queue_p = 0;
+        this.queuePointer = 0;
         /**Queue dir (used by reverse card) */
-        this.queue_dir = true;
+        this.queueDirection = true;
         /**Number of turns that player has to do before switching to another player */
         this.turns = 1;
         /**Temp field for counting the */
-        this.turns_temp = 0;
+        this.turnsTemp = 0;
         /**Temp field to save the chosen person in sniper card action */
-        this.queue_p_temp = -1;
+        this.queuePointerTemp = -1;
 
         /**Used to recover game state after usage of nu nu nu card */
-        this.last_state = null;
+        this.lastState = null;
         /**Determines whether last action can be recovered by nu nu nu card */
         this.negable = false;
         /**Actions transaction flag */
-        this.change_flag = true;
+        this.changeFlag = true;
 
-        this.expected_action = null;
-        this.expected_action_players = [];
+        this.expectedAction = null;
+        this.expectedActionPlayers = [];
     }
 
-    add_player(id, nickname, name) {
-        if (this.players.size < this.max_players) {
+    addPlayer(id, nickname, name) {
+        if (this.players.size < this.maxPlayers) {
             this.players.set(id, {
                 publicId: crypto.randomUUID(),
                 nickname: nickname,
@@ -55,7 +55,7 @@ export class Room {
         return false;
     }
 
-    get_player_list() {
+    getPlayerList() {
         const list = [];
         for (const [id, player] of this.players.entries()) {
             list.push({ id, nickname: player.nickname });
@@ -63,48 +63,100 @@ export class Room {
         return list;
     }
 
+    _removeFromQueue(socketId) {
+        const idx = this.queue.indexOf(socketId);
+        if (idx === -1) return;
+        if (idx < this.queuePointer) {
+            this.queuePointer--;
+        }
+        this.queue.splice(idx, 1);
+        if (this.queue.length > 0) {
+            this.queuePointer = this.queuePointer % this.queue.length;
+        } else {
+            this.queuePointer = 0;
+        }
+    }
+
+    /**
+     * Handles HARD disconnect (tab closed).
+     * Removes player from everywhere (Map and Queue).
+     * @returns {Object} { wasPlayer: boolean, roomEmpty: boolean, gameActive: boolean }
+     */
+    disconnectPlayer(socketId) {
+        if (!this.players.has(socketId)) {
+            return { wasPlayer: false, roomEmpty: false, gameActive: false };
+        }
+
+        this._removeFromQueue(socketId);
+        this.players.delete(socketId);
+
+        return {
+            wasPlayer: true,
+            roomEmpty: this.players.size === 0,
+            gameActive: this.roomClosed
+        };
+    }
+
+    /**
+     * Handles Game Over for a player (Exploding Pig).
+     * Removes from queue (cannot play), but keeps in Map (can spectate).
+     */
+    eliminatePlayer(socketId) {
+        if (!this.players.has(socketId)) return false;
+        this._removeFromQueue(socketId);
+        return true;
+    }
+
     /**Returns whether player is in the room */
-    validate_player(player_id) {
-        return this.players.has(player_id);
+    validatePlayer(playerId) {
+        return this.players.has(playerId);
     }
 
     /**Creates a game backup to restore after the usage of nu nu nu card */
-    save_state() {
-        this.change_flag = false;
-        this.last_state = {
+    saveState() {
+        this.changeFlag = false;
+        this.lastState = {
             cards: {},
-            thrown: this.thrown,
-            deck: { ...this.deck },
+            thrown: [...this.thrown], // Kopia tablicy
+            deck: [...this.deck],     // Kopia tablicy (fix błędu logicznego)
         };
         for (const key of this.players.keys()) {
-            this.last_state.cards[key] = { ...this.players.get(key).cards };
+            // Kopia kart każdego gracza
+            this.lastState.cards[key] = this.players.get(key).cards.map(card => [...card]); 
         }
     }
 
     /**Adds last action to the last state and frees transaction flag */
-    save_state_action(action) {
-        this.last_state['action'] = action;
-        this.change_flag = true;
+    saveStateAction(action) {
+        this.lastState['action'] = action;
+        this.changeFlag = true;
     }
 
     /**Debug prints */
-    print_game() {
+    printGame() {
         console.log(`Deck - ${this.deck}`);
-        for (const [socketId, idx] of this.queue) {
+        for (const socketId of this.queue) {
             console.log(`${socketId} - ${this.players.get(socketId).cards}`);
         }
     }
 
-    get_queue_index(id) {
-        return this.queue.findIndex(s => s[0] === id);
+    getQueueIndex(id) {
+        return this.queue.indexOf(id);
     }
 
-    get_player_uuid(id) {
-        const item = this.queue.find(s => s[0] === id);
-        return item ? item[1] : null;
+    getPlayerUuid(id) {
+        const player = this.players.get(id);
+        return player ? player.publicId : null;
     }
 
-    start_game() {
+    getSocketIdByUuid(uuid) {
+        for (const [socketId, player] of this.players.entries()) {
+            if (player.publicId === uuid) return socketId;
+        }
+        return null;
+    }
+
+    startGame() {
         let deck = [];
         Object.entries(data).forEach(([key, value]) => {
             if (key !== '1' && key !== '2') {
@@ -119,8 +171,9 @@ export class Room {
                 player.cards.push([deck.pop(), true]);
             }
             shuffleArray(player.cards);
-            const pubId = player.publicId;
-            this.queue.push([key, pubId]);
+            
+            // Queue trzyma teraz tylko SocketID
+            this.queue.push(key); 
         }
         deck.push('2');
         for (const key of this.players.keys()) {
@@ -134,52 +187,70 @@ export class Room {
      * @returns {{ [key: string]: string }}
      * - 'cards': queueID -> 'hand': cards, 'publicId', 'nickname'
      */
-    serve_cards(id) {
+    serveCards(id) {
         if (!this.players.has(id)) return null;
         const res = {};
         res['deck'] = '0';
         res['thrown'] = this.thrown.length > 0 ? this.thrown.at(-1) : null;
-        const index = this.queue.findIndex(([socketId]) => socketId === id);
+        
+        const index = this.queue.indexOf(id);
         const rotatedQueue = rotateArray(this.queue, index);
+        
         const cards = {};
-        for (const [socketId, publicId] of rotatedQueue) {
+        for (const socketId of rotatedQueue) {
+            const player = this.players.get(socketId);
             const hand = [];
-            for (const c of this.players.get(socketId).cards) {
+            for (const c of player.cards) {
                 hand.push(!c[1] || socketId === id ? c[0] : '0');
             }
 
-            const playerIndex = rotatedQueue.findIndex(s => s[0] === socketId);
+            const playerIndex = rotatedQueue.indexOf(socketId);
             cards[playerIndex] = {
                 hand: hand,
-                publicId: publicId,
-                nickname: this.players.get(socketId).nickname,
+                publicId: player.publicId,
+                nickname: player.nickname,
             };
         }
         res['cards'] = cards;
         return res;
     }
 
-    indexes_to_cards(player_id, idx) {
-        let cards = this.players.get(player_id).cards;
+    indexesToCards(playerId, idx) {
+        let cards = this.players.get(playerId).cards;
         return idx.map(x => cards[x][0]);
     }
 
     // Handles the queue direction, turns etc., should be runned after every change in this.turns
-    handle_queue() {
+    handleQueue() {
         if (this.turns === 0) {
-            if (this.queue_dir) this.queue_p = (this.queue_p + 1) % this.queue.length;
-            else this.queue_p = (this.queue_p - 1 + this.queue.length) % this.queue.length;
-            if (this.queue_p_temp !== -1) this.queue_p = this.queue_p_temp;
-            if (this.turns_temp) this.turns = this.turns_temp;
+            if (this.queueDirection) this.queuePointer = (this.queuePointer + 1) % this.queue.length;
+            else this.queuePointer = (this.queuePointer - 1 + this.queue.length) % this.queue.length;
+            
+            if (this.queuePointerTemp !== -1) this.queuePointer = this.queuePointerTemp;
+            
+            if (this.turnsTemp) this.turns = this.turnsTemp;
             else this.turns = 1;
-            this.turns_temp = 0;
-            this.queue_p_temp = -1;
+            
+            this.turnsTemp = 0;
+            this.queuePointerTemp = -1;
         }
-        return [this.queue_p, this.turns, this.queue[this.queue_p][1]];
+        // Return UUID for frontend consistency based on current pointer
+        const currentSocketId = this.queue[this.queuePointer];
+        const currentPublicId = this.players.get(currentSocketId).publicId;
+        
+        return [this.queuePointer, this.turns, currentPublicId];
     }
 
-    remove_cards(player_id, indexes) {
-        const playerCards = this.players.get(player_id).cards;
+    handlePlayerAction(playerId) {
+        this.expectedActionPlayers = this.expectedActionPlayers.filter(p => p !== playerId);
+        if (this.expectedActionPlayers.length === 0) {
+            this.expectedAction = null;
+            this.handleQueue();
+        }
+    }
+
+    removeCards(playerId, indexes) {
+        const playerCards = this.players.get(playerId).cards;
         const sortedIndices = [...indexes].sort((a, b) => b - a);
         for (const c of sortedIndices) {
             const removedCard = playerCards.splice(c, 1)[0][0];
@@ -187,224 +258,225 @@ export class Room {
         }
     }
 
-    is_player_turn(player_id) {
-        return this.queue[this.queue_p][0] === player_id;
+    isPlayerTurn(playerId) {
+        return this.queue[this.queuePointer] === playerId;
     }
 
     // ? ====== NOTE: PLAYER CARDS ACTIONS ======
 
-    take_card_top(player_id) {
+    takeCardTop(playerId) {
         console.log('take top');
-        if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.deck.length > 0 && this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.turns--;
             this.negable = false;
             const card = this.deck.pop();
-            this.players.get(player_id).cards.push([card, true]);
+            this.players.get(playerId).cards.push([card, true]);
             let actions = {
-                [player_id]: [['move', 'deck', 'hand', card]],
-                other: [['move', 'deck', player_id, '0']],
+                [playerId]: [['move', 'deck', 'hand', card]],
+                other: [['move', 'deck', playerId, '0']],
             };
-            this.save_state_action(actions);
+            this.saveStateAction(actions);
             return actions;
         }
         return null;
     }
 
-    take_card_bot(player_id) {
+    takeCardBot(playerId) {
         console.log('take bottom');
-        if (this.deck.length > 0 && this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.deck.length > 0 && this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.turns--;
             this.negable = false;
-            this.players.get(player_id).cards.push([this.deck.shift(), true]);
+            const card = this.deck.shift(); // shift removes from start (bottom)
+            this.players.get(playerId).cards.push([card, true]);
             let action = {
-                [player_id]: [['move', 'deck', 'hand', card]],
-                other: [['move', 'deck', player_id, '0']],
+                [playerId]: [['move', 'deck', 'hand', card]],
+                other: [['move', 'deck', playerId, '0']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    see_n_cards_top(player_id, n) {
+    seeNCardsTop(playerId, n) {
         console.log(`see ${n} cards`);
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = false;
             let action = {
-                [player_id]: [
+                [playerId]: [
                     ['move', 'hand', 'thrown', `9_${n}`],
                     ['peekFuture', this.deck.slice(-n).reverse()],
                 ],
-                other: [['move', player_id, 'thrown', `9_${n}`]],
+                other: [['move', playerId, 'thrown', `9_${n}`]],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    mix_n_cards_top(player_id, n) {
+    mixNCardsTop(playerId, n) {
         console.log(`change ${n} cards`);
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = false;
-            this.expected_action = 'changeFuture';
-            this.expected_action_players = [player_id];
+            this.expectedAction = 'changeFuture';
+            this.expectedActionPlayers = [playerId];
             let action = {
-                [player_id]: [
+                [playerId]: [
                     ['move', 'hand', 'thrown', `10_${n}`],
                     ['changeFuture', this.deck.slice(-n).reverse()],
                 ],
-                other: [['move', player_id, 'thrown', `10_${n}`]],
+                other: [['move', playerId, 'thrown', `10_${n}`]],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    skip_turn(player_id) {
+    skipTurn(playerId) {
         console.log('skip');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.turns--;
             this.negable = true;
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '3']],
-                other: [['move', player_id, 'thrown', '3']],
+                [playerId]: [['move', 'hand', 'thrown', '3']],
+                other: [['move', playerId, 'thrown', '3']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    skip_all_turns(player_id) {
+    skipAllTurns(playerId) {
         console.log('skip all');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.turns = 0;
             this.negable = true;
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '4']],
-                other: [['move', player_id, 'thrown', '4']],
+                [playerId]: [['move', 'hand', 'thrown', '4']],
+                other: [['move', playerId, 'thrown', '4']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    shuffle_deck(player_id) {
+    shuffleDeck(playerId) {
         console.log('shuffle');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = true;
             shuffleArray(this.deck);
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '8']],
-                other: [['move', player_id, 'thrown', '8']],
+                [playerId]: [['move', 'hand', 'thrown', '8']],
+                other: [['move', playerId, 'thrown', '8']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    inverse_queue(player_id) {
+    inverseQueue(playerId) {
         console.log('inverse');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = true;
             this.turns--;
-            this.queue_dir = !this.queue_dir;
+            this.queueDirection = !this.queueDirection;
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '5']],
-                other: [['move', player_id, 'thrown', '5']],
+                [playerId]: [['move', 'hand', 'thrown', '5']],
+                other: [['move', playerId, 'thrown', '5']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    attack_n_times_next(player_id, n) {
+    attackNTimesNext(playerId, n) {
         console.log(`attack ${n} times`);
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = true;
-            if (this.turns_temp > n - 1) {
-                this.turns_temp += n;
+            if (this.turnsTemp > n - 1) {
+                this.turnsTemp += n;
             } else {
-                this.turns_temp = n;
+                this.turnsTemp = n;
             }
             this.turns--;
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '6']],
-                other: [['move', player_id, 'thrown', '6']],
+                [playerId]: [['move', 'hand', 'thrown', '6']],
+                other: [['move', playerId, 'thrown', '6']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    attack_n_times_target(player_id, n, target_id) {}
+    attackNTimesTarget(playerId, n, targetId) {}
 
-    all_bombs_top(player_id) {
+    allBombsTop(playerId) {
         console.log('bombs on top');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = true;
-            let old_len = this.deck.length;
+            let oldLen = this.deck.length;
             this.deck = this.deck.filter(x => x !== '1');
             shuffleArray(this.deck);
-            let bombs = Array(old_len - this.deck.length).fill('1');
+            let bombs = Array(oldLen - this.deck.length).fill('1');
             this.deck = [...this.deck, ...bombs];
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '17']],
-                other: [['move', player_id, 'thrown', '17']],
+                [playerId]: [['move', 'hand', 'thrown', '17']],
+                other: [['move', playerId, 'thrown', '17']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    all_bombs_bot(player_id) {
+    allBombsBot(playerId) {
         console.log('bombs on bottom');
-        if (this.is_player_turn(player_id) && this.turns > 0) {
-            this.save_state();
+        if (this.isPlayerTurn(playerId) && this.turns > 0) {
+            this.saveState();
             this.negable = true;
-            let old_len = this.deck.length;
+            let oldLen = this.deck.length;
             this.deck = this.deck.filter(x => x !== '1');
             shuffleArray(this.deck);
-            let bombs = Array(old_len - this.deck.length).fill('1');
+            let bombs = Array(oldLen - this.deck.length).fill('1');
             this.deck = [...bombs, ...this.deck];
             let action = {
-                [player_id]: [['move', 'hand', 'thrown', '18']],
-                other: [['move', player_id, 'thrown', '18']],
+                [playerId]: [['move', 'hand', 'thrown', '18']],
+                other: [['move', playerId, 'thrown', '18']],
             };
-            this.save_state_action(action);
+            this.saveStateAction(action);
             return action;
         }
         return null;
     }
 
-    piss_player(player_id) {}
+    pissPlayer(playerId) {}
 
-    take_random_from_player(player_id) {}
+    takeRandomFromPlayer(playerId) {}
 
-    nonono(player_id) {}
+    nonono(playerId) {}
 
     // ? ====== NOTE: PLAYERS OTHER ACTIONS ======
 
-    handle_cards_mix(player_id, indexes) {
+    handleCardsMix(playerId, indexes) {
         console.log(`mixing cards with indexes ${indexes}`);
-        this.save_state();
+        this.saveState();
         const cutoff = this.deck.length - indexes.length;
         const bottomCards = this.deck.slice(0, cutoff);
         const topCardsOrig = this.deck.slice(cutoff);
@@ -415,7 +487,8 @@ export class Room {
         let action = {
             other: [],
         };
-        this.save_state_action(action);
+        this.handlePlayerAction(playerId);
+        this.saveStateAction(action);
         return action;
     }
 }

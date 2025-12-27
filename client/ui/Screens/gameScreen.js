@@ -12,6 +12,7 @@ import Card from '../components/card';
 import PlayerHand from '../components/PlayerHand';
 import PlayerList from '../components/PlayerList';
 import ChangeCardsPopup from '../components/popups/changeCardsPopup';
+import ChoosePlayerPopup from '../components/popups/choosePlayerPopup';
 import ShowCardsPopup from '../components/popups/showCardsPopup';
 
 export default function GameScreen({ navigation }) {
@@ -259,6 +260,18 @@ export default function GameScreen({ navigation }) {
                         indexes.reverse();
                         console.log(indexes);
                         socket.emit('gameAction', roomCode, 'changeFuture', indexes);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'choosePlayerSniper' && (
+                <ChoosePlayerPopup
+                    cards={popupData}
+                    title={'Snipe the player to give him +2 turns!'}
+                    showSelf={true}
+                    onExit={player => {
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'choosePlayerSniper', player.publicId);
                     }}
                 />
             )}

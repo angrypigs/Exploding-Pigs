@@ -4,10 +4,10 @@ export default function roomHandler(io, socket, rooms) {
     socket.on('joinRoom', (code, nickname, name) => {
         if (rooms.has(code)) {
             let room = rooms.get(code);
-            if (room.add_player(socket.id, nickname, name) && !room.room_closed) {
+            if (room.addPlayer(socket.id, nickname, name) && !room.room_closed) {
                 socket.join(code);
                 socket.emit('joinRoom', code, nickname, name);
-                io.to(code).emit('refreshRoom', rooms.get(code).get_player_list());
+                io.to(code).emit('refreshRoom', rooms.get(code).getPlayerList());
             } else {
                 socket.emit('joinRoom', false, 'Room is full');
             }
@@ -27,7 +27,7 @@ export default function roomHandler(io, socket, rooms) {
         }
         if (new_key !== null && max_players < 9) {
             rooms.set(new_key, new Room(max_players));
-            rooms.get(new_key).add_player(socket.id, nickname, name);
+            rooms.get(new_key).addPlayer(socket.id, nickname, name);
             socket.join(new_key);
             socket.emit('joinRoom', new_key, nickname, name);
         } else {
@@ -37,7 +37,7 @@ export default function roomHandler(io, socket, rooms) {
 
     socket.on('refreshRoom', code => {
         if (rooms.has(code)) {
-            socket.emit('refreshRoom', rooms.get(code).get_player_list());
+            socket.emit('refreshRoom', rooms.get(code).getPlayerList());
         } else {
             socket.emit('refreshGame', null);
         }
@@ -60,12 +60,12 @@ export default function roomHandler(io, socket, rooms) {
 
             room.room_closed = isAllReady;
             if (isAllReady) {
-                room.start_game();
+                room.startGame();
                 io.to(code).emit('roomReady');
                 setTimeout(() => {
                     console.log('game start');
                     for (const key of room.players.keys()) {
-                        const res = room.serve_cards(key);
+                        const res = room.serveCards(key);
                         io.to(key).emit(
                             'refreshGame',
                             null,
