@@ -37,6 +37,7 @@ export class Room {
 
         this.expectedAction = null;
         this.expectedActionPlayers = [];
+        this.tempActionPlayer = null;
     }
 
     getPlayerList() {

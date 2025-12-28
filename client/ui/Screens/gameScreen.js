@@ -89,12 +89,10 @@ export default function GameScreen({ navigation }) {
                             targetY: c_end.y,
                             type: a[3],
                         };
-                    } else if (a[0] === 'peekFuture') {
-                        setPopupData(a[1]);
-                        setPopupFlag('peekFuture');
-                    } else if (a[0] === 'changeFuture') {
-                        setPopupData(a[1]);
-                        setPopupFlag('changeFuture');
+                    } else if (a[0] === 'popup') {
+                        console.log(a[1]);
+                        setPopupData(a[2]);
+                        setPopupFlag(a[1]);
                     }
                 }
                 setAnims(prev => ({ ...(prev ?? {}), ...tempAnims }));
@@ -266,12 +264,35 @@ export default function GameScreen({ navigation }) {
 
             {popupFlag === 'choosePlayerSniper' && (
                 <ChoosePlayerPopup
-                    cards={popupData}
+                    cards={cards}
                     title={'Snipe the player to give him +2 turns!'}
                     showSelf={true}
                     onExit={player => {
                         setPopupFlag(null);
                         socket.emit('gameAction', roomCode, 'choosePlayerSniper', player.publicId);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'choosePlayerFavor' && (
+                <ChoosePlayerPopup
+                    cards={cards}
+                    title={"Choose the player that'll have to give you a card"}
+                    showSelf={false}
+                    onExit={player => {
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'choosePlayerFavor', player.publicId);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'chooseCardFavor' && (
+                <ShowCardsPopup
+                    cards={cards?.[0]?.hand || []}
+                    title={"Select a card which you'll give to player"}
+                    onSelect={card => {
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'chooseCardFavor', card);
                     }}
                 />
             )}

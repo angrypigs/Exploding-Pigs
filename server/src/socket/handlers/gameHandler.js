@@ -54,10 +54,10 @@ export default function gameHandler(io, socket, rooms) {
 
     socket.on('gameAction', (code, actionName, actionData) => {
         handleRoomAction(code, room => {
-            if (room.expectedAction === null || !room.expectedActionPlayers.includes(socket.id)) {
+            if (room.expectedAction !== actionName || !room.expectedActionPlayers.includes(socket.id)) {
                 return null;
             }
-
+            console.log(socket.id, actionName, actionData)
             return actionsValidation(room, socket.id, actionName, actionData);
         });
     });

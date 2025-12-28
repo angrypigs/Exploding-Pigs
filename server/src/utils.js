@@ -17,6 +17,6 @@ export function rotateArray(arr, shift) {
 }
 
 export function getSecondInt(str) {
-  const i = str.indexOf('_');
-  return Number(str.slice(i + 1));
+    const i = str.indexOf('_');
+    return Number(str.slice(i + 1));
 }

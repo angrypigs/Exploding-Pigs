@@ -1,5 +1,5 @@
 import { Instructions } from '../modules/instructions.js';
-import { getSecondInt, shuffleArray } from "../utils.js";
+import { getSecondInt, shuffleArray } from '../utils.js';
 
 export default function cardsLogicSimple(room, playerId, cardId) {
     switch (cardId) {
@@ -10,7 +10,7 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.negable = true;
                 return {
                     [playerId]: [Instructions.discard('3')],
-                    other: [Instructions.discard('3', playerId)],
+                    other: [Instructions.discard('3', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -22,7 +22,7 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.negable = true;
                 return {
                     [playerId]: [Instructions.discard('4')],
-                    other: [Instructions.discard('4', playerId)],
+                    other: [Instructions.discard('4', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -35,13 +35,14 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.queueDirection = !room.queueDirection;
                 return {
                     [playerId]: [Instructions.discard('5')],
-                    other: [Instructions.discard('5', playerId)],
+                    other: [Instructions.discard('5', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
 
         case '6':
             if (room.isPlayerTurn(playerId)) {
+                if (room.queuePointerTemp !== -1) return null;
                 room.saveState();
                 room.negable = true;
                 if (room.turnsTemp > 2 - 1) {
@@ -52,11 +53,22 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.modifyTurns(-1);
                 return {
                     [playerId]: [Instructions.discard('6')],
-                    other: [Instructions.discard('6', playerId)],
+                    other: [Instructions.discard('6', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
-
+        case '7':
+            if (room.isPlayerTurn(playerId)) {
+                room.saveState();
+                room.negable = true;
+                room.expectedAction = 'choosePlayerSniper';
+                room.expectedActionPlayers = [playerId];
+                return {
+                    [playerId]: [Instructions.discard('7'), Instructions.choosePlayerSniper()],
+                    other: [Instructions.discard('7', room.getPlayerUuid(playerId))],
+                };
+            }
+            return null;
         case '8':
             if (room.isPlayerTurn(playerId)) {
                 room.saveState();
@@ -64,9 +76,7 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 shuffleArray(room.deck);
                 return {
                     [playerId]: [Instructions.discard('8')],
-                    other: [
-                        Instructions.discard('8', playerId), 
-                    ],
+                    other: [Instructions.discard('8', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -81,9 +91,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 return {
                     [playerId]: [
                         Instructions.discard(`9_${n}`),
-                        Instructions.peekFuture(room.deck.slice(-n).reverse())
+                        Instructions.peekFuture(room.deck.slice(-n).reverse()),
                     ],
-                    other: [Instructions.discard('0', playerId)],
+                    other: [Instructions.discard(`9_${n}`, room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -102,11 +112,22 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                         Instructions.discard(`10_${n}`),
                         Instructions.changeFuture(room.deck.slice(-n).reverse()),
                     ],
-                    other: [Instructions.discard(`10_${n}`, playerId)],
+                    other: [Instructions.discard(`10_${n}`, room.getPlayerUuid(playerId))],
                 };
             }
             return null;
-
+        case '16':
+            if (room.isPlayerTurn(playerId)) {
+                room.saveState();
+                room.negable = true;
+                room.expectedAction = 'choosePlayerFavor';
+                room.expectedActionPlayers = [playerId];
+                return {
+                    [playerId]: [Instructions.discard('7'), Instructions.choosePlayerFavor()],
+                    other: [Instructions.discard('7', room.getPlayerUuid(playerId))],
+                };
+            }
+            return null;
         case '17':
             if (room.isPlayerTurn(playerId)) {
                 room.saveState();
@@ -118,7 +139,7 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.deck = [...room.deck, ...bombs];
                 return {
                     [playerId]: [Instructions.discard('17')],
-                    other: [Instructions.discard('17', playerId)],
+                    other: [Instructions.discard('17', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -134,7 +155,7 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.deck = [...bombs, ...room.deck];
                 return {
                     [playerId]: [Instructions.discard('18')],
-                    other: [Instructions.discard('18', playerId)],
+                    other: [Instructions.discard('18', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
@@ -147,8 +168,14 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 const card = room.deck.shift();
                 room.players.get(playerId).cards.push([card, true]);
                 return {
-                    [playerId]: [Instructions.move('deck', 'hand', card)],
-                    other: [Instructions.move('deck', playerId, '0')],
+                    [playerId]: [
+                        Instructions.move('deck', 'hand', card),
+                        Instructions.discard('18'),
+                    ],
+                    other: [
+                        Instructions.move('deck', room.getPlayerUuid(playerId), '0'),
+                        Instructions.discard('18', room.getPlayerUuid(playerId)),
+                    ],
                 };
             }
             return null;
