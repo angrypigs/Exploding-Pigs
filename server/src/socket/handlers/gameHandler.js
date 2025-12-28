@@ -1,12 +1,10 @@
-import { cardsValidation, actionsValidation } from '../../modules/gamelogic.js';
+import { actionsValidation, cardsValidation } from '../../modules/gameLogic.js';
 
 export default function gameHandler(io, socket, rooms) {
-
     const broadcastGameUpdate = (room, actions, turnData) => {
         for (const playerId of room.players.keys()) {
             const playerAction = actions[playerId] ?? actions['other'];
             const view = room.serveCards(playerId);
-            
             io.to(playerId).emit(
                 'refreshGame',
                 playerAction,
@@ -36,17 +34,16 @@ export default function gameHandler(io, socket, rooms) {
         }
     };
 
-    socket.on('takeCard', (code) => {
-        handleRoomAction(code, (room) => {
+    socket.on('takeCard', code => {
+        handleRoomAction(code, room => {
             return room.takeCardTop(socket.id);
         });
     });
 
     socket.on('throwCard', (code, cardsIndexes) => {
-        handleRoomAction(code, (room) => {
+        handleRoomAction(code, room => {
             const cards = room.indexesToCards(socket.id, cardsIndexes);
             const actions = cardsValidation(room, socket.id, cards);
-
             if (actions) {
                 room.removeCards(socket.id, cardsIndexes);
                 return actions;
@@ -56,9 +53,8 @@ export default function gameHandler(io, socket, rooms) {
     });
 
     socket.on('gameAction', (code, actionName, actionData) => {
-        handleRoomAction(code, (room) => {
-            if (room.expectedAction === null || 
-                !room.expectedActionPlayers.includes(socket.id)) {
+        handleRoomAction(code, room => {
+            if (room.expectedAction === null || !room.expectedActionPlayers.includes(socket.id)) {
                 return null;
             }
 
