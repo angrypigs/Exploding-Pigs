@@ -1,62 +1,68 @@
-import { cardsValidation } from '../../modules/gamelogic.js';
+import { cardsValidation, actionsValidation } from '../../modules/gamelogic.js';
 
 export default function gameHandler(io, socket, rooms) {
-    socket.on('takeCard', code => {
-        const room = rooms.get(code);
-        if (room && room.validate_player(socket.id)) {
-            const actions = room.take_card_top(socket.id);
-            if (actions) {
-                const turn_data = room.handle_queue();
-                for (const key of room.players.keys()) {
-                    const action = actions[key] ?? actions['other'];
-                    const res = room.serve_cards(key);
-                    // room.print_game()
-                    io.to(key).emit(
-                        'refreshGame',
-                        action,
-                        res['cards'],
-                        res['deck'],
-                        res['thrown'],
-                        turn_data
-                    );
-                }
-            } else {
-                socket.emit('refreshGame', false);
-            }
-        } else {
-            socket.emit('refreshGame', null);
+
+    const broadcastGameUpdate = (room, actions, turnData) => {
+        for (const playerId of room.players.keys()) {
+            const playerAction = actions[playerId] ?? actions['other'];
+            const view = room.serveCards(playerId);
+            
+            io.to(playerId).emit(
+                'refreshGame',
+                playerAction,
+                view['cards'],
+                view['deck'],
+                view['thrown'],
+                turnData
+            );
         }
+    };
+
+    const handleRoomAction = (code, actionCallback) => {
+        const room = rooms.get(code);
+
+        if (!room || !room.validatePlayer(socket.id)) {
+            socket.emit('refreshGame', null);
+            return;
+        }
+
+        const actions = actionCallback(room);
+
+        if (actions) {
+            const turnData = room.handleQueue();
+            broadcastGameUpdate(room, actions, turnData);
+        } else {
+            socket.emit('refreshGame', false);
+        }
+    };
+
+    socket.on('takeCard', (code) => {
+        handleRoomAction(code, (room) => {
+            return room.takeCardTop(socket.id);
+        });
     });
 
-    //FIXME: DO CHECKS FOR ERORRS ETC
     socket.on('throwCard', (code, cardsIndexes) => {
-        const room = rooms.get(code);
-        if (room && room.validate_player(socket.id)) {
-            let cards = room.indexes_to_cards(socket.id, cardsIndexes);
-            console.log(cards);
-            let actions = cardsValidation(room, socket.id, cards);
-            if (actions !== null) {
-                room.remove_cards(socket.id, cardsIndexes);
-                const turn_data = room.handle_queue();
-                for (const key of room.players.keys()) {
-                    const action = actions[key] ?? actions['other'];
-                    const res = room.serve_cards(key);
-                    console.log(actions);
-                    // room.print_game()
-                    io.to(key).emit(
-                        'refreshGame',
-                        action,
-                        res['cards'],
-                        res['deck'],
-                        res['thrown'],
-                        turn_data
-                    );
-                }
-            } else {
-                socket.emit('refreshGame', false);
+        handleRoomAction(code, (room) => {
+            const cards = room.indexesToCards(socket.id, cardsIndexes);
+            const actions = cardsValidation(room, socket.id, cards);
+
+            if (actions) {
+                room.removeCards(socket.id, cardsIndexes);
+                return actions;
             }
-        } else {
-            socket.emit('refreshGame', null);
-        }
+            return null;
+        });
+    });
+
+    socket.on('gameAction', (code, actionName, actionData) => {
+        handleRoomAction(code, (room) => {
+            if (room.expectedAction === null || 
+                !room.expectedActionPlayers.includes(socket.id)) {
+                return null;
+            }
+
+            return actionsValidation(room, socket.id, actionName, actionData);
+        });
     });
 }

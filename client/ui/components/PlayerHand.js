@@ -1,122 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Card from './card';
 
 export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
-    const [isHandHovered, setIsHandHovered] = useState(false);
     const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
-    const [scrollState, setScrollState] = useState({
-        contentWidth: 0,
-        containerWidth: 0,
-        showLeft: false,
-        showRight: false,
-    });
-
-    const scrollRef = useRef(null);
-    const scrollIntervalRef = useRef(null);
-    const scrollXRef = useRef(0);
-    const contentWidthRef = useRef(0);
-
-    const updateArrowState = x => {
-        setScrollState(prev => {
-            const { contentWidth, containerWidth } = prev;
-            return {
-                ...prev,
-                showLeft: x > 5,
-                showRight: x < contentWidth - containerWidth - 5,
-            };
-        });
-    };
-
-    const startScrolling = direction => {
-        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
-        scrollIntervalRef.current = setInterval(() => {
-            const SCROLL_STEP = 20;
-            let newX =
-                direction === 'left'
-                    ? Math.max(0, scrollXRef.current - SCROLL_STEP)
-                    : scrollXRef.current + SCROLL_STEP;
-
-            if (scrollRef.current) {
-                scrollRef.current.scrollTo({ x: newX, animated: false });
-            }
-        }, 30);
-    };
-
-    const stopScrolling = () => {
-        if (scrollIntervalRef.current) {
-            clearInterval(scrollIntervalRef.current);
-            scrollIntervalRef.current = null;
-        }
-    };
-
-    useEffect(() => {
-        return () => stopScrolling();
-    }, []);
 
     return (
         <View style={styles.myHandContainer} pointerEvents="box-none">
             <ScrollView
-                ref={scrollRef}
                 horizontal={true}
-                showsHorizontalScrollIndicator={Platform.OS === 'web'}
-                contentContainerStyle={[
-                    styles.myHandContent,
-                    isHandHovered && { paddingBottom: 0 },
-                ]}
+                showsHorizontalScrollIndicator={true}
+                persistentScrollbar={Platform.OS === 'web'}
+                contentContainerStyle={styles.myHandContent}
                 style={{ flex: 1 }}
-                scrollEventThrottle={16}
-                onScroll={event => {
-                    scrollXRef.current = event.nativeEvent.contentOffset.x;
-                    updateArrowState(scrollXRef.current);
-                }}
-                onContentSizeChange={(w, h) => {
-                    contentWidthRef.current = w;
-                    setScrollState(prev => ({
-                        ...prev,
-                        contentWidth: w,
-                        showRight: w > prev.containerWidth,
-                    }));
-                }}
-                onLayout={event => {
-                    const width = event.nativeEvent.layout.width;
-                    setScrollState(prev => ({
-                        ...prev,
-                        containerWidth: width,
-                        showRight: prev.contentWidth > width,
-                    }));
-                }}
             >
                 {cards?.hand.map((c, i) => {
-                    const isHovered = hoveredCardIndex === i;
                     return (
                         <Pressable
                             key={`hand-${i}`}
-                            onHoverIn={() => {
-                                setIsHandHovered(true);
-                                setHoveredCardIndex(i);
-                            }}
-                            onHoverOut={() => {
-                                setIsHandHovered(false);
-                                setHoveredCardIndex(null);
-                            }}
-                            onPressIn={() => {
-                                setIsHandHovered(true);
-                                setHoveredCardIndex(i);
-                            }}
-                            onPressOut={() => {
-                                setIsHandHovered(false);
-                                setHoveredCardIndex(null);
-                            }}
+                            onHoverIn={() => setHoveredCardIndex(i)}
+                            onHoverOut={() => setHoveredCardIndex(null)}
                             onPress={() => onSelectCard(i)}
-                            style={[styles.cardWrapper]}
+                            style={styles.cardWrapper}
                         >
-                            <View
-                                style={[
-                                    styles.innerCardContainer,
-                                    isHovered && styles.innerCardContainerHovered,
-                                ]}
-                            >
+                            <View style={[styles.innerCardContainer]}>
                                 <Card
                                     type={c}
                                     onPress={() => onSelectCard(i)}
@@ -128,30 +35,6 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
                     );
                 })}
             </ScrollView>
-
-            {/* {scrollState.showLeft && (
-                <Pressable
-                    style={[styles.arrowContainer, styles.arrowLeft]}
-                    onPressIn={() => startScrolling('left')}
-                    onPressOut={stopScrolling}
-                    onHoverIn={() => Platform.OS === 'web' && startScrolling('left')}
-                    onHoverOut={() => Platform.OS === 'web' && stopScrolling()}
-                >
-                    <Text style={styles.arrowText}>{'<'}</Text>
-                </Pressable>
-            )}
-
-            {scrollState.showRight && (
-                <Pressable
-                    style={[styles.arrowContainer, styles.arrowRight]}
-                    onPressIn={() => startScrolling('right')}
-                    onPressOut={stopScrolling}
-                    onHoverIn={() => Platform.OS === 'web' && startScrolling('right')}
-                    onHoverOut={() => Platform.OS === 'web' && stopScrolling()}
-                >
-                    <Text style={styles.arrowText}>{'>'}</Text>
-                </Pressable>
-            )} */}
         </View>
     );
 }
@@ -159,45 +42,31 @@ export default function PlayerHand({ cards, selectedCards, onSelectCard }) {
 const styles = StyleSheet.create({
     myHandContainer: {
         position: 'relative',
-        height: 200,
+        height: 220,
         paddingHorizontal: 20,
         zIndex: 100,
+        maxWidth: '100%',
+        width: '100%',
     },
     myHandContent: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'flex-end',
-        paddingBottom: 20,
+        paddingBottom: 30,
         paddingTop: 20,
+        paddingRight: 20,
     },
     cardWrapper: {
         width: 100,
         height: 140,
-        marginHorizontal: 0,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,
     },
-
     innerCardContainer: {
         width: '100%',
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-
-    innerCardContainerHovered: {
-        zIndex: 100,
-        transform: [{ translateY: -60 }, { scale: 1.1 }],
-    },
-    arrowContainer: {
-        position: 'absolute',
-        bottom: 20,
-        height: 140,
-        width: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        zIndex: 200,
     },
 });

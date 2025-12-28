@@ -5,7 +5,7 @@ import { SocketContext } from '../../contexts/socketContext';
 
 import { stylesMain } from '../../styles/stylesMain';
 import { Button } from '../components/button';
-import { PlayerList } from '../components/player_list';
+import { RoomPlayerList } from '../components/roomPlayerList';
 
 export default function RoomScreen({ navigation }) {
     const socket = useContext(SocketContext);
@@ -41,7 +41,7 @@ export default function RoomScreen({ navigation }) {
                 <Text style={stylesMain.text}>Nickname: {nickname}</Text>
                 {name ? <Text style={stylesMain.text}>Name: {name}</Text> : null}
             </View>
-            <PlayerList players={players} setPlayers={setPlayers} />
+            <RoomPlayerList players={players} setPlayers={setPlayers} />
             <Button title="Ready" onPress={handlePlayerReady} />
         </View>
     );

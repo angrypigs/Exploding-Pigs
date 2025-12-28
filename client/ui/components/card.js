@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
         height: 150,
     },
     hoveredTransform: {
-        transform: [{ scale: 1.1 }, { translateY: -20 }],
-        zIndex: 1000,
+        transform: [{ scale: 1.2 }, { translateY: -20 }],
+        zIndex: 100,
     },
 });

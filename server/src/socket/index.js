@@ -4,21 +4,36 @@ import roomHandler from './handlers/roomHandler.js';
 export default function socketHandler(io, rooms) {
     io.on('connection', socket => {
         console.log('New client:', socket.id);
+
         roomHandler(io, socket, rooms);
         gameHandler(io, socket, rooms);
+
         socket.on('disconnect', () => {
-            console.log('Rozłączono:', socket.id);
+            console.log('Disconnected:', socket.id);
             for (const [code, room] of rooms.entries()) {
-                if (room.players.has(socket.id)) {
-                    room.players.delete(socket.id);
-                    room.queue = room.queue.filter(el => el[0] !== socket.id);
-                    if (room.queue_dir) room.queue_p = room.queue_p % room.queue.length;
-                    else room.queue_p = (room.queue_p - 1 + room.queue.length) % room.queue.length;
-                    console.log(`Usunięto gracza ${socket.id} z pokoju ${code}`);
-                    io.to(code).emit('refreshRoom', room.get_player_list());
-                    if (room.players.size === 0) {
+                const { wasPlayer, roomEmpty, gameActive } = room.disconnectPlayer(socket.id);
+                if (wasPlayer) {
+                    console.log(`Player ${socket.id} has been removed from the room ${code}`);
+                    if (roomEmpty) {
                         rooms.delete(code);
-                        console.log(`Pokój ${code} został usunięty, bo nie ma graczy`);
+                        console.log(`Room ${code} was empty and deleted`);
+                    } else {
+                        if (gameActive) {
+                            const turnData = room.handleQueue();
+                            for (const playerId of room.players.keys()) {
+                                const res = room.serveCards(playerId);
+                                io.to(playerId).emit(
+                                    'refreshGame',
+                                    null,
+                                    res['cards'],
+                                    res['deck'],
+                                    res['thrown'],
+                                    turnData
+                                );
+                            }
+                        } else {
+                            io.to(code).emit('refreshRoom', room.getPlayerList());
+                        }
                     }
                     break;
                 }

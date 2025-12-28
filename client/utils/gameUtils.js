@@ -76,6 +76,8 @@ export function isGameCode(str) {
     return str.length === 5 && /^\d{5}$/.test(str);
 }
 
+export const range = n => [...Array(n).keys()];
+
 export const coords = {
     thrown: { x: width / 2 + 55, y: height / 2 },
     deck: { x: width / 2 - 55, y: height / 2 },

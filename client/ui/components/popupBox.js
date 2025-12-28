@@ -9,7 +9,7 @@ export default function PopupBox({ children, title = '', onExit = null }) {
             <View style={styles.box}>
                 {headerFlag && (
                     <View style={styles.header}>
-                        {title !== '' && <Text style={stylesMain.text}>title</Text>}
+                        {title !== '' && <Text style={stylesMain.text}>{title}</Text>}
                         {onExit !== null && <CloseButton onPress={onExit} />}
                     </View>
                 )}
@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#156915ff',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 10,
     },
     header: {
         position: 'absolute',
