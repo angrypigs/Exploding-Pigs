@@ -1,4 +1,6 @@
 import cardsLogicSimple from '../modules/cardsLogicSimple.js';
+import { insertRandom, shuffleArray } from '../utils.js';
+import cardsLogicMultiple from './cardsLogicMultiple.js';
 import { Instructions } from './instructions.js';
 
 export function cardsValidation(room, playerId, cards) {
@@ -6,11 +8,12 @@ export function cardsValidation(room, playerId, cards) {
         case 1:
             return cardsLogicSimple(room, playerId, cards[0]);
         default:
-            return null;
+            return cardsLogicMultiple(room, playerId, cards);
     }
 }
 
 export function actionsValidation(room, playerId, action_name, data) {
+    console.log(`action name validator: ${action_name}`)
     switch (action_name) {
         case 'changeFuture': {
             const cutoff = room.deck.length - data.length;
@@ -46,7 +49,7 @@ export function actionsValidation(room, playerId, action_name, data) {
             console.log(data);
             const publicId = room.getSocketIdByUuid(data);
             if (publicId === null) return null;
-            console.log("socket id: " + data);
+            console.log('socket id: ' + data);
             room.tempActionPlayer = playerId;
             room.expectedAction = 'chooseCardFavor';
             room.expectedActionPlayers = [publicId];
@@ -63,16 +66,57 @@ export function actionsValidation(room, playerId, action_name, data) {
 
                 const card = attackedPlayer.cards.splice(data, 1)[0][0];
                 attackingPlayer.cards.push([card, true]);
-                
+
                 let action = {
                     [playerId]: [Instructions.move('hand', attackingPlayer.publicId, card)],
-                    [room.tempActionPlayer]: [Instructions.move(attackedPlayer.publicId, 'hand', card)],
-                    other: [Instructions.move(attackedPlayer.publicId, attackingPlayer.publicId, '0')],
+                    [room.tempActionPlayer]: [
+                        Instructions.move(attackedPlayer.publicId, 'hand', card),
+                    ],
+                    other: [
+                        Instructions.move(attackedPlayer.publicId, attackingPlayer.publicId, '0'),
+                    ],
                 };
                 room.handlePlayerAction(playerId);
                 return action;
             }
             return null;
+        }
+        case 'chooseCardFromPlayerProfanation': {
+            const socketId = room.getSocketIdByUuid(data.player);
+            if (socketId === null) return null;
+            room.players.get(socketId).cards[data.card][1] = false;
+            let action = {
+                other: [],
+            };
+            room.handlePlayerAction(playerId);
+            return action;
+        }
+        case 'chooseCardFundraiser': {
+            const card = room.players.get(playerId).cards.splice(data, 1)[0][0];
+            insertRandom(room.deck, card);
+            room.handlePlayerAction(playerId);
+            if (room.expectedAction === null) shuffleArray(room.deck);
+            let action = {
+                [playerId]: [Instructions.move('hand', 'deck', card)],
+                other: [Instructions.move(room.getPlayerUuid(playerId), 'deck', '0')],
+            };
+            return action;
+        }
+        case 'chooseCardFromPlayerPair': {
+            const socketId = room.getSocketIdByUuid(data.player);
+            if (socketId === null) return null;
+            console.log(action_name, data)
+            const attackingPlayer = room.players.get(playerId);
+            const attackedPlayer = room.players.get(socketId);
+            const card = attackedPlayer.cards.splice(data.card, 1)[0][0];
+            insertRandom(attackingPlayer.cards, [card, true]);
+            let action = {
+                [playerId]: [Instructions.move(attackedPlayer.publicId, 'hand', card)],
+                [socketId]: [Instructions.move('hand', attackingPlayer.publicId, card)],
+                other: [Instructions.move(attackedPlayer.publicId, attackingPlayer.publicId, '0')],
+            };
+            room.handlePlayerAction(playerId);
+            return action;
         }
         default:
             return null;

@@ -36,12 +36,14 @@ export default function gameHandler(io, socket, rooms) {
 
     socket.on('takeCard', code => {
         handleRoomAction(code, room => {
+            if (room.expectedAction !== null) return null;
             return room.takeCardTop(socket.id);
         });
     });
 
     socket.on('throwCard', (code, cardsIndexes) => {
         handleRoomAction(code, room => {
+            if (room.expectedAction !== null) return null;
             const cards = room.indexesToCards(socket.id, cardsIndexes);
             const actions = cardsValidation(room, socket.id, cards);
             if (actions) {
@@ -54,10 +56,13 @@ export default function gameHandler(io, socket, rooms) {
 
     socket.on('gameAction', (code, actionName, actionData) => {
         handleRoomAction(code, room => {
-            if (room.expectedAction !== actionName || !room.expectedActionPlayers.includes(socket.id)) {
+            if (
+                room.expectedAction !== actionName ||
+                !room.expectedActionPlayers.includes(socket.id)
+            ) {
                 return null;
             }
-            console.log(socket.id, actionName, actionData)
+            console.log(socket.id, actionName, actionData);
             return actionsValidation(room, socket.id, actionName, actionData);
         });
     });

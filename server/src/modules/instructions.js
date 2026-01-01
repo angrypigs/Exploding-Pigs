@@ -7,4 +7,7 @@ export const Instructions = {
     choosePlayerSniper: () => ['popup', 'choosePlayerSniper'],
     choosePlayerFavor: () => ['popup', 'choosePlayerFavor'],
     chooseCardFavor: () => ['popup', 'chooseCardFavor'],
+    chooseCardFundraiser: () => ['popup', 'chooseCardFundraiser'],
+    chooseCardFromPlayerProfanation: () => ['popup', 'chooseCardFromPlayerProfanation'],
+    chooseCardFromPlayerPair: () => ['popup', 'chooseCardFromPlayerPair'],
 };

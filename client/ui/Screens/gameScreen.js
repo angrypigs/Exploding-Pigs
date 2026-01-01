@@ -12,6 +12,7 @@ import Card from '../components/card';
 import PlayerHand from '../components/PlayerHand';
 import PlayerList from '../components/PlayerList';
 import ChangeCardsPopup from '../components/popups/changeCardsPopup';
+import ChooseCardFromPlayerPopup from '../components/popups/chooseCardFromPlayerPopup';
 import ChoosePlayerPopup from '../components/popups/choosePlayerPopup';
 import ShowCardsPopup from '../components/popups/showCardsPopup';
 
@@ -293,6 +294,44 @@ export default function GameScreen({ navigation }) {
                     onSelect={card => {
                         setPopupFlag(null);
                         socket.emit('gameAction', roomCode, 'chooseCardFavor', card);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'chooseCardFundraiser' && (
+                <ShowCardsPopup
+                    cards={cards?.[0]?.hand || []}
+                    title={"Select a card which you'll add to the fundraiser"}
+                    onSelect={card => {
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'chooseCardFundraiser', card);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'chooseCardFromPlayerProfanation' && (
+                <ChooseCardFromPlayerPopup
+                    cards={cards}
+                    title={
+                        "Choose a card from any player that'll be seen by everyone till stolen or used"
+                    }
+                    showSelf={false}
+                    onExit={res => {
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'chooseCardFromPlayerProfanation', res);
+                    }}
+                />
+            )}
+
+            {popupFlag === 'chooseCardFromPlayerPair' && (
+                <ChooseCardFromPlayerPopup
+                    cards={cards}
+                    title={'Steal a card from any player!'}
+                    showSelf={false}
+                    onExit={res => {
+                        console.log(res);
+                        setPopupFlag(null);
+                        socket.emit('gameAction', roomCode, 'chooseCardFromPlayerPair', res);
                     }}
                 />
             )}

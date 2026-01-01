@@ -16,6 +16,12 @@ export function rotateArray(arr, shift) {
     return arr.slice(k).concat(arr.slice(0, k));
 }
 
+export function insertRandom(arr, element) {
+    const index = Math.floor(Math.random() * (arr.length + 1));
+    arr.splice(index, 0, element);
+    return arr;
+}
+
 export function getSecondInt(str) {
     const i = str.indexOf('_');
     return Number(str.slice(i + 1));

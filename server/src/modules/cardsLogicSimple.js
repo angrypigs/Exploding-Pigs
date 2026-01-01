@@ -116,6 +116,36 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 };
             }
             return null;
+        case '11':
+            if (room.isPlayerTurn(playerId)) {
+                room.saveState();
+                room.negable = true;
+                room.expectedAction = 'chooseCardFundraiser';
+                room.expectedActionPlayers = [...room.players.keys()];
+                return {
+                    [playerId]: [Instructions.discard('11'), Instructions.chooseCardFundraiser()],
+                    other: [
+                        Instructions.discard('11', room.getPlayerUuid(playerId)),
+                        Instructions.chooseCardFundraiser(),
+                    ],
+                };
+            }
+            return null;
+        case '12':
+            if (room.isPlayerTurn(playerId)) {
+                room.saveState();
+                room.negable = true;
+                room.expectedAction = 'chooseCardFromPlayerProfanation';
+                room.expectedActionPlayers = [playerId];
+                return {
+                    [playerId]: [
+                        Instructions.discard('12'),
+                        Instructions.chooseCardFromPlayerProfanation(),
+                    ],
+                    other: [Instructions.discard('12', room.getPlayerUuid(playerId))],
+                };
+            }
+            return null;
         case '16':
             if (room.isPlayerTurn(playerId)) {
                 room.saveState();
@@ -123,8 +153,8 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 room.expectedAction = 'choosePlayerFavor';
                 room.expectedActionPlayers = [playerId];
                 return {
-                    [playerId]: [Instructions.discard('7'), Instructions.choosePlayerFavor()],
-                    other: [Instructions.discard('7', room.getPlayerUuid(playerId))],
+                    [playerId]: [Instructions.discard('16'), Instructions.choosePlayerFavor()],
+                    other: [Instructions.discard('16', room.getPlayerUuid(playerId))],
                 };
             }
             return null;
