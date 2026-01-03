@@ -1,13 +1,14 @@
 import { Instructions } from '../modules/instructions.js';
 import { getSecondInt, shuffleArray } from '../utils.js';
 
-export default function cardsLogicSimple(room, playerId, cardId) {
+export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) {
     switch (cardId) {
         case '3':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
+                room.setNegable(true);
                 room.modifyTurns(-1);
-                room.negable = true;
                 return {
                     [playerId]: [Instructions.discard('3')],
                     other: [Instructions.discard('3', room.getPlayerUuid(playerId))],
@@ -17,9 +18,10 @@ export default function cardsLogicSimple(room, playerId, cardId) {
 
         case '4':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
+                room.setNegable(true);
                 room.modifyTurns(-99);
-                room.negable = true;
                 return {
                     [playerId]: [Instructions.discard('4')],
                     other: [Instructions.discard('4', room.getPlayerUuid(playerId))],
@@ -29,8 +31,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
 
         case '5':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 room.modifyTurns(-1);
                 room.queueDirection = !room.queueDirection;
                 return {
@@ -42,15 +45,16 @@ export default function cardsLogicSimple(room, playerId, cardId) {
 
         case '6':
             if (room.isPlayerTurn(playerId)) {
-                if (room.queuePointerTemp !== -1) return null;
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                if (room.queuePointerTemp !== -1) return null;
+                room.setNegable(true);
+                room.modifyTurns(-1);
                 if (room.turnsTemp > 2 - 1) {
                     room.turnsTemp += 2;
                 } else {
                     room.turnsTemp = 2;
                 }
-                room.modifyTurns(-1);
                 return {
                     [playerId]: [Instructions.discard('6')],
                     other: [Instructions.discard('6', room.getPlayerUuid(playerId))],
@@ -59,8 +63,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
             return null;
         case '7':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 room.expectedAction = 'choosePlayerSniper';
                 room.expectedActionPlayers = [playerId];
                 return {
@@ -71,8 +76,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
             return null;
         case '8':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 shuffleArray(room.deck);
                 return {
                     [playerId]: [Instructions.discard('8')],
@@ -85,9 +91,10 @@ export default function cardsLogicSimple(room, playerId, cardId) {
         case '9_4':
         case '9_5':
             if (room.isPlayerTurn(playerId)) {
-                let n = getSecondInt(cardId);
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = false;
+                let n = getSecondInt(cardId);
+                room.setNegable(false);
                 return {
                     [playerId]: [
                         Instructions.discard(`9_${n}`),
@@ -102,9 +109,10 @@ export default function cardsLogicSimple(room, playerId, cardId) {
         case '10_4':
         case '10_5':
             if (room.isPlayerTurn(playerId)) {
-                let n = getSecondInt(cardId);
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = false;
+                let n = getSecondInt(cardId);
+                room.setNegable(false);
                 room.expectedAction = 'changeFuture';
                 room.expectedActionPlayers = [playerId];
                 return {
@@ -118,8 +126,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
             return null;
         case '11':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 room.expectedAction = 'chooseCardFundraiser';
                 room.expectedActionPlayers = [...room.players.keys()];
                 return {
@@ -133,8 +142,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
             return null;
         case '12':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 room.expectedAction = 'chooseCardFromPlayerProfanation';
                 room.expectedActionPlayers = [playerId];
                 return {
@@ -146,10 +156,41 @@ export default function cardsLogicSimple(room, playerId, cardId) {
                 };
             }
             return null;
+        case '13':
+            if (room.negable) {
+                const success = room.swapStates(playerId);
+                console.log('swap success: ' + success)
+                if (!success) return null;
+                room.removeCards(playerId, cardsToRemove);
+                let action = {
+                    [playerId]: [Instructions.discard('13')],
+                    other: [Instructions.discard('13', playerId)]
+                };
+                if (room.expectedAction) {
+                    const instrFn = Instructions[room.expectedAction];
+                    if (typeof instrFn === 'function') {
+                        const popupCmd = instrFn();
+                        room.expectedActionPlayers.forEach(targetId => {
+                            if (!action[targetId]) {
+                                action[targetId] = [...action.other];
+                            }
+                            action[targetId].push(popupCmd);
+                        });
+                    }
+                } else {
+                    action[playerId].push(Instructions.cancelInteraction());
+                    action.other.push(Instructions.cancelInteraction());
+                }
+                console.log(`nu nu nu action`)
+                console.log(action)
+                return action;
+            }
+            return null;
         case '16':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 room.expectedAction = 'choosePlayerFavor';
                 room.expectedActionPlayers = [playerId];
                 return {
@@ -160,8 +201,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
             return null;
         case '17':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 let oldLen = room.deck.length;
                 room.deck = room.deck.filter(x => x !== '1');
                 shuffleArray(room.deck);
@@ -176,8 +218,9 @@ export default function cardsLogicSimple(room, playerId, cardId) {
 
         case '18':
             if (room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
-                room.negable = true;
+                room.setNegable(true);
                 let oldLen = room.deck.length;
                 room.deck = room.deck.filter(x => x !== '1');
                 shuffleArray(room.deck);
@@ -192,9 +235,10 @@ export default function cardsLogicSimple(room, playerId, cardId) {
 
         case '19':
             if (room.deck.length > 0 && room.isPlayerTurn(playerId)) {
+                room.removeCards(playerId, cardsToRemove);
                 room.saveState();
+                room.setNegable(true);
                 room.modifyTurns(-1);
-                room.negable = false;
                 const card = room.deck.shift();
                 room.players.get(playerId).cards.push([card, true]);
                 return {

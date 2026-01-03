@@ -115,16 +115,75 @@ export class Room {
 
     // ?  ======================= NOTE - NU NU NU SAVE HANDLERS =======================
 
+    _getSnapshot() {
+        const snapshot = {
+            deck: [...this.deck],
+            thrown: [...this.thrown],
+            cards: {},
+
+            queuePointer: this.queuePointer,
+            queueDirection: this.queueDirection,
+            turns: this.turns,
+            turnsTemp: this.turnsTemp,
+            queuePointerTemp: this.queuePointerTemp,
+
+            expectedAction: this.expectedAction,
+            expectedActionPlayers: [...this.expectedActionPlayers],
+            tempActionPlayer: this.tempActionPlayer
+        };
+
+        for (const key of this.players.keys()) {
+            snapshot.cards[key] = this.players.get(key).cards.map(card => [...card]);
+        }
+
+        return snapshot;
+    }
+
+    // ? ========================== NOTE - SAVE & SWAP ==========================
+
     /**Creates a game backup to restore after the usage of nu nu nu card */
     saveState() {
-        this.lastState = {
-            cards: {},
-            thrown: [...this.thrown],
-            deck: [...this.deck],
-        };
-        for (const key of this.players.keys()) {
-            this.lastState.cards[key] = this.players.get(key).cards.map(card => [...card]);
+        this.lastState = this._getSnapshot();
+        this.lastState.expectedAction = null;
+    }
+
+    swapStates(playerId) {
+        if (!this.lastState) return false;
+
+        const tempState = this._getSnapshot();
+
+        if (tempState.cards[playerId]) {
+            const hand = tempState.cards[playerId];
+            const nopeIndex = hand.findIndex(c => c[0] === '13');
+            if (nopeIndex !== -1) {
+                hand.splice(nopeIndex, 1);
+            }
         }
+
+        const ls = this.lastState;
+
+        this.deck = [...ls.deck];
+        this.thrown = [...ls.thrown];
+        this.queuePointer = ls.queuePointer;
+        this.queueDirection = ls.queueDirection;
+        this.turns = ls.turns;
+        this.turnsTemp = ls.turnsTemp;
+        this.queuePointerTemp = ls.queuePointerTemp;
+        this.expectedAction = ls.expectedAction;
+        this.expectedActionPlayers = [...ls.expectedActionPlayers];
+        this.tempActionPlayer = ls.tempActionPlayer;
+
+        for (const key of this.players.keys()) {
+            if (ls.cards[key] && this.players.has(key)) {
+                this.players.get(key).cards = ls.cards[key].map(card => [...card]);
+            }
+        }
+
+        this.lastState = tempState;
+
+        this.negable = true;
+
+        return true;
     }
 
     // ? ========================= NOTE - HELPERS ================================
@@ -240,6 +299,10 @@ export class Room {
         this.turns = Math.max(0, this.turns + val);
     }
 
+    setNegable(val) {
+        this.negable = val;
+    }
+
     removeCards(playerId, indexes) {
         const playerCards = this.players.get(playerId).cards;
         const sortedIndices = [...indexes].sort((a, b) => b - a);
@@ -264,9 +327,8 @@ export class Room {
     takeCardTop(playerId) {
         console.log('take top');
         if (this.deck.length > 0 && this.isPlayerTurn(playerId)) {
-            this.saveState();
-            this.turns--;
-            this.negable = false;
+            this.setNegable(false);
+            this.modifyTurns(-1);
             const card = this.deck.pop();
             this.players.get(playerId).cards.push([card, true]);
             let actions = {

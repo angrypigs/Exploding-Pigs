@@ -43,11 +43,11 @@ export default function gameHandler(io, socket, rooms) {
 
     socket.on('throwCard', (code, cardsIndexes) => {
         handleRoomAction(code, room => {
-            if (room.expectedAction !== null) return null;
             const cards = room.indexesToCards(socket.id, cardsIndexes);
-            const actions = cardsValidation(room, socket.id, cards);
+            if (room.expectedAction !== null && 
+                !(cards.length === 1 && cards[0] === "13")) return null;
+            const actions = cardsValidation(room, socket.id, cards, cardsIndexes);
             if (actions) {
-                room.removeCards(socket.id, cardsIndexes);
                 return actions;
             }
             return null;

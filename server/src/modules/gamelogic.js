@@ -3,17 +3,16 @@ import { insertRandom, shuffleArray } from '../utils.js';
 import cardsLogicMultiple from './cardsLogicMultiple.js';
 import { Instructions } from './instructions.js';
 
-export function cardsValidation(room, playerId, cards) {
+export function cardsValidation(room, playerId, cards, cardsToRemove) {
     switch (cards.length) {
         case 1:
-            return cardsLogicSimple(room, playerId, cards[0]);
+            return cardsLogicSimple(room, playerId, cards[0], cardsToRemove);
         default:
-            return cardsLogicMultiple(room, playerId, cards);
+            return cardsLogicMultiple(room, playerId, cards, cardsToRemove);
     }
 }
 
 export function actionsValidation(room, playerId, action_name, data) {
-    console.log(`action name validator: ${action_name}`)
     switch (action_name) {
         case 'changeFuture': {
             const cutoff = room.deck.length - data.length;
@@ -46,10 +45,8 @@ export function actionsValidation(room, playerId, action_name, data) {
             return action;
         }
         case 'choosePlayerFavor': {
-            console.log(data);
             const publicId = room.getSocketIdByUuid(data);
             if (publicId === null) return null;
-            console.log('socket id: ' + data);
             room.tempActionPlayer = playerId;
             room.expectedAction = 'chooseCardFavor';
             room.expectedActionPlayers = [publicId];
