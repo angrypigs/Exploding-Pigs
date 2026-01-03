@@ -27,7 +27,6 @@ export default function PlayerList({
                 relativeId: key,
             }))
             .sort((a, b) => parseInt(a.relativeId) - parseInt(b.relativeId));
-
         if (!showSelf) {
             return sorted.filter(p => p.relativeId !== '0');
         }
