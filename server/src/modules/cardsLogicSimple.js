@@ -158,10 +158,18 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
             return null;
         case '13':
             if (room.negable) {
+                room.removeCards(playerId, cardsToRemove);
                 const success = room.swapStates(playerId);
+
+                //NOTE: sprawdzić czy to dobrze usuwa po indeksach nie nie nie
+                const hand = room.players.get(playerId).cards;
+                const nopeIndex = hand.findIndex(c => c[0] === '13');
+                if (nopeIndex !== -1) {
+                    hand.splice(nopeIndex, 1);
+                }
+
                 console.log('swap success: ' + success)
                 if (!success) return null;
-                room.removeCards(playerId, cardsToRemove);
                 let action = {
                     [playerId]: [Instructions.discard('13')],
                     other: [Instructions.discard('13', playerId)]
