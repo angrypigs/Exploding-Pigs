@@ -3,7 +3,7 @@ import subprocess
 PORT = "4000"
 
 def get_local_ip() -> str:
-    result = subprocess.check_output("ipconfig", shell=True, text=True)
+    result = subprocess.check_output("ipconfig", shell=True).decode(errors='ignore')
 
     in_wifi = False
 
