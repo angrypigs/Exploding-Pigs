@@ -6,14 +6,6 @@ import socketHandler from './src/socket/index.js';
 
 const app = express();
 
-app.get('/test', (req, res) => {
-    res.send({
-        status: 'Serwer żyje!',
-        timestamp: new Date().toISOString(),
-        message: 'Jeśli to widzisz na telefonie, połączenie działa!',
-    });
-});
-
 const server = http.createServer(app);
 
 const rooms = new Map();
