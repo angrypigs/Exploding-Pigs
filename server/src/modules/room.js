@@ -148,17 +148,11 @@ export class Room {
     }
 
     swapStates(playerId) {
+        // czy jest last state wogle
         if (!this.lastState) return false;
 
+        // zapis aktualnego stanu
         const tempState = this._getSnapshot();
-
-        if (tempState.cards[playerId]) {
-            const hand = tempState.cards[playerId];
-            const nopeIndex = hand.findIndex(c => c[0] === '13');
-            if (nopeIndex !== -1) {
-                hand.splice(nopeIndex, 1);
-            }
-        }
 
         const ls = this.lastState;
 

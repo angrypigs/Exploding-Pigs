@@ -2,22 +2,18 @@ import subprocess
 
 PORT = "4000"
 
+import socket
+
 def get_local_ip() -> str:
-    result = subprocess.check_output("ipconfig", shell=True, text=True)
-
-    in_wifi = False
-
-    for line in result.splitlines():
-        if "Wireless LAN adapter Wi-Fi" in line:
-            in_wifi = True
-            continue
-
-        if in_wifi:
-            print(line, "IPv4 Address" in line)
-        if in_wifi and "IPv4 Address" in line:
-            return line.split(":")[-1].strip()
-
-    return "127.0.0.1"
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
 
 def update_local_env(IP):
     client_api = f"EXPO_PUBLIC_API_URL=http://{IP}:{PORT}"
