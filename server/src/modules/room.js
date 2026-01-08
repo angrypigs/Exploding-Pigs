@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { data, rotateArray, shuffleArray } from '../utils.js';
+import { data, rotateArray, shuffleArray, insertRandom, addActions } from '../utils.js';
+import { Instructions } from './instructions.js';
 
 export class Room {
     constructor(maxPlayers) {
@@ -57,7 +58,7 @@ export class Room {
                 nickname: nickname,
                 name: name,
                 readyFlag: false,
-                cards: [],
+                cards: []
             });
             return true;
         }
@@ -103,7 +104,8 @@ export class Room {
      * Removes from queue (cannot play), but keeps in Map (can spectate).
      */
     eliminatePlayer(socketId) {
-        if (!this.players.has(socketId)) return false;
+        const p = this.players.get(socketId);
+        if (!p) return false;
         this._removeFromQueue(socketId);
         return true;
     }
@@ -240,29 +242,60 @@ export class Room {
      */
     serveCards(id) {
         if (!this.players.has(id)) return null;
+        
         const res = {};
         res['deck'] = '0';
         res['thrown'] = this.thrown.length > 0 ? this.thrown.at(-1) : null;
-
-        const index = this.queue.indexOf(id);
-        const rotatedQueue = rotateArray(this.queue, index);
-
+        
         const cards = {};
-        for (const socketId of rotatedQueue) {
-            const player = this.players.get(socketId);
-            const hand = [];
-            for (const c of player.cards) {
-                hand.push(!c[1] || socketId === id ? c[0] : '0');
-            }
+        const isAlive = this.queue.includes(id);
 
-            const playerIndex = rotatedQueue.indexOf(socketId);
-            cards[playerIndex] = {
-                hand: hand,
-                publicId: player.publicId,
-                nickname: player.nickname,
+        if (isAlive) {
+            const index = this.queue.indexOf(id);
+            const rotatedQueue = rotateArray(this.queue, index);
+
+            for (let i = 0; i < rotatedQueue.length; i++) {
+                const socketId = rotatedQueue[i];
+                const player = this.players.get(socketId);
+                
+                const hand = [];
+                for (const c of player.cards) {
+                    hand.push(!c[1] || socketId === id ? c[0] : '0');
+                }
+
+                cards[i] = {
+                    hand: hand,
+                    publicId: player.publicId,
+                    nickname: player.nickname,
+                    isEliminated: false
+                };
+            }
+        } else {
+            const me = this.players.get(id);
+            cards[0] = {
+                hand: [],
+                publicId: me.publicId,
+                nickname: me.nickname,
             };
+
+            for (let i = 0; i < this.queue.length; i++) {
+                const socketId = this.queue[i];
+                const player = this.players.get(socketId);
+                
+                const hand = [];
+                for (const c of player.cards) {
+                    hand.push('0');
+                }
+
+                cards[i + 1] = {
+                    hand: hand,
+                    publicId: player.publicId,
+                    nickname: player.nickname
+                };
+            }
         }
         res['cards'] = cards;
+
         return res;
     }
 
@@ -306,6 +339,37 @@ export class Room {
         }
     }
 
+    bombHandler(playerId) {
+        console.log('player ' + playerId + ' got bomb uwu');
+        const player = this.players.get(playerId);
+        const idx = player.cards.findIndex(c => c[0] === '2');
+
+        if (idx === -1) {
+            while (player.cards.length > 0) {
+                const cardTuple = player.cards.pop();
+                this.thrown.push(cardTuple[0]);
+            }
+            this.thrown.push('1');
+
+            this.eliminatePlayer(playerId);
+
+            return {
+                other: [Instructions.discard('1', this.getPlayerUuid(playerId)), Instructions.elimination(this.getPlayerUuid(playerId))],
+                [playerId]: [Instructions.discard('1'), Instructions.elimination()]
+            };
+        } else {
+            player.cards.splice(idx, 1);
+            this.thrown.push('2');
+            
+            insertRandom(this.deck, '1');
+
+            return {
+                other: [Instructions.discard('2', this.getPlayerUuid(playerId))],
+                [playerId]: [Instructions.discard('2')]
+            };
+        }
+    }
+
     // ? ============================== NOTE: PLAYER SPECIAL ACTIONS HANDLERS =============================
 
     handlePlayerAction(playerId) {
@@ -324,11 +388,14 @@ export class Room {
             this.setNegable(false);
             this.modifyTurns(-1);
             const card = this.deck.pop();
-            this.players.get(playerId).cards.push([card, true]);
+            let newActions = null;
+            if (card === '1') newActions = this.bombHandler(playerId);
+            else this.players.get(playerId).cards.push([card, true]);
             let actions = {
-                [playerId]: [['move', 'deck', 'hand', card]],
-                other: [['move', 'deck', playerId, '0']],
+                [playerId]: [Instructions.move('deck', 'hand', card)],
+                other: [Instructions.move('deck', playerId, '0')],
             };
+            addActions(actions, newActions);
             return actions;
         }
         return null;

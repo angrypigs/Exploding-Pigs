@@ -26,3 +26,12 @@ export function getSecondInt(str) {
     const i = str.indexOf('_');
     return Number(str.slice(i + 1));
 }
+
+export function addActions(act, actAdd) {
+    if (!actAdd) return act;
+    for (const key in actAdd) {
+        if (Array.isArray(act[key])) act[key].push(...actAdd[key]);
+        else act[key] = [...actAdd[key]];
+    }
+    return act;
+}
