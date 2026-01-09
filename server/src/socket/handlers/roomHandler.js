@@ -57,22 +57,24 @@ export default function roomHandler(io, socket, rooms) {
                     break;
                 }
             }
+            room.room_closed = false;
 
-            room.room_closed = isAllReady;
-            if (isAllReady) {
+            if (isAllReady && room.players.size > 1) {
+                room.room_closed = true;
                 room.startGame();
                 io.to(code).emit('roomReady');
                 setTimeout(() => {
                     console.log('game start');
                     for (const key of room.players.keys()) {
                         const res = room.serveCards(key);
+                        const turn_data = room.handleQueue();
                         io.to(key).emit(
                             'refreshGame',
                             null,
                             res['cards'],
                             res['deck'],
                             res['thrown'],
-                            [0, 1]
+                            turn_data
                         );
                     }
                 }, 2000);

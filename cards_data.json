@@ -18,56 +18,56 @@
     "desc": "Skip this turn without picking a card",
     "img": "3",
     "color": "#ae8bee",
-    "count": 6
+    "count": 5
   },
   "4": {
     "name": "Skip everything",
     "desc": "Skip this round without picking a card, even if you have many turns on you",
     "img": "4",
     "color": "#ae8bee",
-    "count": 2
+    "count": 1
   },
   "5": {
     "name": "Reverse",
     "desc": "Reverse the game order and and one turn without picking a card",
     "img": "5",
     "color": "#ae8bee",
-    "count": 6
+    "count": 4
   },
   "6": {
     "name": "Attack",
     "desc": "Skip this turn without picking a card. Next player in the order has 2 turns",
     "img": "6",
     "color": "#1fc4c5",
-    "count": 6
+    "count": 5
   },
   "7": {
     "name": "Sniper",
     "desc": "Skip this round without picking a card and choose a player (can be yourself) that will play 2 turns",
     "img": "7",
     "color": "#199b9c",
-    "count": 5
+    "count": 4
   },
   "8": {
     "name": "Shuffle",
     "desc": "Shuffle the deck",
     "img": "8",
     "color": "#E8DFCF",
-    "count": 6
+    "count": 4
   },
   "9_3": {
     "name": "View the future (3 cards)",
     "desc": "Take the three outerwear cards, look at them and put it back on the deck",
     "img": "9_3",
     "color": "#d7a711",
-    "count": 3
+    "count": 2
   },
   "9_4": {
     "name": "View the future (4 cards)",
     "desc": "Take the four outerwear cards, look at them and put it back on the deck",
     "img": "9_4",
     "color": "#d7a711",
-    "count": 2
+    "count": 1
   },
   "9_5": {
     "name": "View the future (5 cards)",
@@ -81,14 +81,14 @@
     "desc": "Take the three outerwear cards, look at them (you can change the order of them) and put it back on the deck",
     "img": "10_3",
     "color": "#add611",
-    "count": 3
+    "count": 2
   },
   "10_4": {
     "name": "Change the future (4 cards)",
     "desc": "Take the four outerwear cards, look at them (you can change the order of them) and put it back on the deck",
     "img": "10_4",
     "color": "#add611",
-    "count": 2
+    "count": 1
   },
   "10_5": {
     "name": "Change the future (5 cards)",
@@ -109,14 +109,14 @@
     "desc": "Profanate on of the player's cards - it will be visible for other players until it is stolen or used",
     "img": "12",
     "color": "#614a14",
-    "count": 6
+    "count": 4
   },
   "13": {
     "name": "Nu Nu Nu",
     "desc": "Stop the player's action, or negate other player's Nu Nu Nu. Can be used after several actions",
     "img": "13",
     "color": "#136126",
-    "count": 30
+    "count": 6
   },
   "14_1": {
     "name": "Cake",
@@ -165,7 +165,7 @@
     "desc": "The player chosen by you has to give you chosen by him card (if he has any)",
     "img": "16",
     "color": "#611330",
-    "count": 6
+    "count": 5
   },
   "17": {
     "name": "Piggasaki",

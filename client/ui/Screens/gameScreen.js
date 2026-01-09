@@ -31,6 +31,7 @@ export default function GameScreen({ navigation }) {
 
     const [popupFlag, setPopupFlag] = useState(null);
     const [popupData, setPopupData] = useState(null);
+    const [pendingGameOver, setPendingGameOver] = useState(null);
 
     const cards_ref = useRef({});
     const thrown_ref = useRef(null);
@@ -57,6 +58,47 @@ export default function GameScreen({ navigation }) {
             }
         };
     }, [navigation]);
+
+    useEffect(() => {
+        if (pendingGameOver) {
+            const safetyTimer = setTimeout(() => {
+                navigation.navigate('GameOver', {
+                    isWon: pendingGameOver.isWon ?? false,
+                    winner: pendingGameOver.winner ?? null,
+                });
+            }, 5000);
+
+            return () => clearTimeout(safetyTimer);
+        }
+    }, [pendingGameOver, navigation]);
+
+    useEffect(() => {
+        if (pendingGameOver) {
+            if (!anims) {
+                const happyTimer = setTimeout(() => {
+                    navigation.navigate('GameOver', {
+                        isWon: pendingGameOver.isWon ?? false,
+                        winner: pendingGameOver.winner ?? null,
+                    });
+                }, 2000);
+                return () => clearTimeout(happyTimer);
+            }
+        }
+    }, [anims, pendingGameOver, navigation]);
+
+    useEffect(() => {
+        if (pendingGameOver) {
+            if (!anims) {
+                const timer = setTimeout(() => {
+                    navigation.navigate('GameOver', {
+                        isWon: pendingGameOver.isWon ?? false,
+                        winner: pendingGameOver.winner ?? null,
+                    });
+                }, 2000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [anims, pendingGameOver, navigation]);
 
     useEffect(() => {
         if (anims === null) {
@@ -100,7 +142,16 @@ export default function GameScreen({ navigation }) {
                 setAnimTrigger(prev => !prev);
             }
         });
-        return () => socket.off('refreshGame');
+
+        socket.on('gameOver', data => {
+            console.log(data);
+            setPendingGameOver(data);
+        });
+
+        return () => {
+            socket.off('refreshGame');
+            socket.off('gameOver');
+        };
     }, [socket]);
 
     const handleTakeCard = () => socket.emit('takeCard', roomCode);

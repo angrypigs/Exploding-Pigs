@@ -11,4 +11,5 @@ export const Instructions = {
     chooseCardFromPlayerProfanation: () => ['popup', 'chooseCardFromPlayerProfanation'],
     chooseCardFromPlayerPair: () => ['popup', 'chooseCardFromPlayerPair'],
     cancelInteraction: () => ['popup', null],
+    elimination: () => ['elimination'],
 };

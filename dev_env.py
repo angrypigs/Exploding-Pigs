@@ -1,10 +1,9 @@
 import subprocess
+import socket
 
 PORT = "4000"
 
-import socket
-
-def get_local_ip() -> str:
+def get_ip_socket():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
@@ -14,6 +13,20 @@ def get_local_ip() -> str:
     finally:
         s.close()
     return ip
+
+def get_ip_wifi():
+    result = subprocess.check_output("ipconfig", shell=True, text=True)
+    in_wifi = False
+
+    for line in result.splitlines():
+        if "Wireless LAN adapter Wi-Fi" in line:
+            in_wifi = True
+            continue
+
+        if in_wifi and "IPv4 Address" in line:
+            return line.split(":")[-1].strip()
+
+    return "127.0.0.1"
 
 def update_local_env(IP):
     client_api = f"EXPO_PUBLIC_API_URL=http://{IP}:{PORT}"
@@ -27,11 +40,19 @@ def update_local_env(IP):
         f.write(f"{server_port}\n{server_ip}")
 
 def main():
-    ip = get_local_ip()
+    mode = input("Wybierz tryb (w = wifi, k = kabel/auto): ").strip().lower()
+
+    if mode == "w":
+        ip = get_ip_wifi()
+    else:
+        ip = get_ip_socket()
+    
+    print(f"Ustawiam IP: {ip}")
+
     update_local_env(ip)
     subprocess.run(
-        f'setx REACT_NATIVE_PACKAGER_HOSTNAME "{ip}"',
-        shell=True
+        ["setx", "REACT_NATIVE_PACKAGER_HOSTNAME", ip],
+        check=True
     )
 
 if __name__ == "__main__":

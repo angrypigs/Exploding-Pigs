@@ -19,14 +19,21 @@ export default function gameHandler(io, socket, rooms) {
     const handleRoomAction = (code, actionCallback) => {
         const room = rooms.get(code);
 
-        if (!room || !room.validatePlayer(socket.id)) {
+        if (!room || !room.validatePlayer(socket.id) || !room.gameActive) {
             socket.emit('refreshGame', null);
             return;
         }
 
         const actions = actionCallback(room);
+        const isGameOver = room.isGameOver();
 
-        if (actions) {
+        if (isGameOver) {
+            const nickname = room.players.get(isGameOver).nickname ?? '';
+            for (const playerId of room.players.keys()) {
+                let isWon = (playerId === isGameOver);
+                io.to(playerId).emit('gameOver', {isWon: isWon, winner: nickname});
+            }
+        } else if (actions) {
             const turnData = room.handleQueue();
             broadcastGameUpdate(room, actions, turnData);
         } else {

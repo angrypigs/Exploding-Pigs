@@ -5,6 +5,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { SocketProvider } from './contexts/socketContext';
 import CreateRoomScreen from './ui/Screens/createRoomScreen';
+import GameOverScreen from './ui/Screens/gameOverScreen';
 import GameScreen from './ui/Screens/gameScreen';
 import HomeScreen from './ui/Screens/homeScreen';
 import JoinRoomScreen from './ui/Screens/joinRoomScreen';
@@ -28,6 +29,7 @@ export default function App() {
                             <Stack.Screen name="JoinRoom" component={JoinRoomScreen} />
                             <Stack.Screen name="CreateRoom" component={CreateRoomScreen} />
                             <Stack.Screen name="Game" component={GameScreen} />
+                            <Stack.Screen name="GameOver" component={GameOverScreen} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </SafeAreaView>

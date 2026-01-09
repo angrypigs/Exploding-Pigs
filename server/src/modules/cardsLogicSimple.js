@@ -1,5 +1,5 @@
 import { Instructions } from '../modules/instructions.js';
-import { getSecondInt, shuffleArray } from '../utils.js';
+import { addActions, getSecondInt, shuffleArray } from '../utils.js';
 
 export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) {
     switch (cardId) {
@@ -129,15 +129,38 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                 room.removeCards(playerId, cardsToRemove);
                 room.saveState();
                 room.setNegable(true);
-                room.expectedAction = 'chooseCardFundraiser';
-                room.expectedActionPlayers = [...room.players.keys()];
-                return {
-                    [playerId]: [Instructions.discard('11'), Instructions.chooseCardFundraiser()],
-                    other: [
-                        Instructions.discard('11', room.getPlayerUuid(playerId)),
-                        Instructions.chooseCardFundraiser(),
-                    ],
+
+                const targetsWithCards = room.queue.filter(id => 
+                    room.players.get(id).cards.length > 0
+                );
+
+                const response = {
+                    other: [Instructions.discard('11', room.getPlayerUuid(playerId))]
                 };
+
+                if (targetsWithCards.length > 0) {
+                    room.expectedAction = 'chooseCardFundraiser';
+                    room.expectedActionPlayers = targetsWithCards;
+
+                    targetsWithCards.forEach(targetId => {
+                        const visual = targetId === playerId 
+                            ? Instructions.discard('11') 
+                            : Instructions.discard('11', room.getPlayerUuid(playerId));
+                        
+                        response[targetId] = [
+                            visual,
+                            Instructions.chooseCardFundraiser()
+                        ];
+                    });
+                } else {
+
+                    room.expectedAction = null;
+                    room.expectedActionPlayers = [];
+
+                    response[playerId] = [Instructions.discard('11')];
+                }
+
+                return response;
             }
             return null;
         case '12':
@@ -145,15 +168,23 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                 room.removeCards(playerId, cardsToRemove);
                 room.saveState();
                 room.setNegable(true);
-                room.expectedAction = 'chooseCardFromPlayerProfanation';
-                room.expectedActionPlayers = [playerId];
-                return {
-                    [playerId]: [
-                        Instructions.discard('12'),
-                        Instructions.chooseCardFromPlayerProfanation(),
-                    ],
+
+                const response = {
+                    [playerId]: [Instructions.discard('12')],
                     other: [Instructions.discard('12', room.getPlayerUuid(playerId))],
                 };
+
+                const othersWithCards = room.queue.some(id => 
+                    id !== playerId && room.players.get(id).cards.length > 0
+                );
+
+                if (othersWithCards) {
+                    room.expectedAction = 'chooseCardFromPlayerProfanation';
+                    room.expectedActionPlayers = [playerId];
+                    response[playerId].push(Instructions.chooseCardFromPlayerProfanation());
+                }
+
+                return response;
             }
             return null;
         case '13':
@@ -248,17 +279,21 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                 room.setNegable(true);
                 room.modifyTurns(-1);
                 const card = room.deck.shift();
-                room.players.get(playerId).cards.push([card, true]);
-                return {
+                let newActions = null;
+                if (card === '1') newActions = room.bombHandler(playerId);
+                else room.players.get(playerId).cards.push([card, true]);
+                let actions = {
                     [playerId]: [
                         Instructions.move('deck', 'hand', card),
-                        Instructions.discard('18'),
+                        Instructions.discard('19'),
                     ],
                     other: [
                         Instructions.move('deck', room.getPlayerUuid(playerId), '0'),
-                        Instructions.discard('18', room.getPlayerUuid(playerId)),
+                        Instructions.discard('19', room.getPlayerUuid(playerId)),
                     ],
                 };
+                addActions(actions, newActions);
+                return actions;
             }
             return null;
 

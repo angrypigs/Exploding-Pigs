@@ -46,7 +46,9 @@ export function actionsValidation(room, playerId, action_name, data) {
         }
         case 'choosePlayerFavor': {
             const publicId = room.getSocketIdByUuid(data);
-            if (publicId === null) return null;
+            if (publicId === null ||
+                room.players.get(publicId)?.cards.length === 0
+                ) return null;
             room.tempActionPlayer = playerId;
             room.expectedAction = 'chooseCardFavor';
             room.expectedActionPlayers = [publicId];
@@ -81,6 +83,8 @@ export function actionsValidation(room, playerId, action_name, data) {
         case 'chooseCardFromPlayerProfanation': {
             const socketId = room.getSocketIdByUuid(data.player);
             if (socketId === null) return null;
+            const targetPlayer = room.players.get(socketId);
+            if (!targetPlayer.cards[data.card]) return null;
             room.players.get(socketId).cards[data.card][1] = false;
             let action = {
                 other: [],
@@ -102,9 +106,9 @@ export function actionsValidation(room, playerId, action_name, data) {
         case 'chooseCardFromPlayerPair': {
             const socketId = room.getSocketIdByUuid(data.player);
             if (socketId === null) return null;
-            console.log(action_name, data)
-            const attackingPlayer = room.players.get(playerId);
             const attackedPlayer = room.players.get(socketId);
+            if (!attackedPlayer.cards[data.card]) return null;
+            const attackingPlayer = room.players.get(playerId);
             const card = attackedPlayer.cards.splice(data.card, 1)[0][0];
             insertRandom(attackingPlayer.cards, [card, true]);
             let action = {
