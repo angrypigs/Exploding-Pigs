@@ -51,8 +51,8 @@ def main():
 
     update_local_env(ip)
     subprocess.run(
-        f'setx REACT_NATIVE_PACKAGER_HOSTNAME "{ip}"',
-        shell=True
+        ["setx", "REACT_NATIVE_PACKAGER_HOSTNAME", ip],
+        check=True
     )
 
 if __name__ == "__main__":

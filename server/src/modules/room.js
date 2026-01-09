@@ -17,6 +17,7 @@ export class Room {
          */
         this.players = new Map();
         this.roomClosed = false;
+        this.gameActive = true;
 
         /**Determines the game order, consists of socket ID-s (strings) */
         this.queue = [];
@@ -113,6 +114,14 @@ export class Room {
     /**Returns whether player is in the room */
     validatePlayer(playerId) {
         return this.players.has(playerId);
+    }
+
+    isGameOver() {
+        if (this.queue.length === 1) {
+            this.gameActive = false;
+            return this.queue[0];
+        }
+        return false;
     }
 
     // ?  ======================= NOTE - NU NU NU SAVE HANDLERS =======================
