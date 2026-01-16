@@ -130,12 +130,12 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                 room.saveState();
                 room.setNegable(true);
 
-                const targetsWithCards = room.queue.filter(id => 
-                    room.players.get(id).cards.length > 0
+                const targetsWithCards = room.queue.filter(
+                    id => room.players.get(id).cards.length > 0
                 );
 
                 const response = {
-                    other: [Instructions.discard('11', room.getPlayerUuid(playerId))]
+                    other: [Instructions.discard('11', room.getPlayerUuid(playerId))],
                 };
 
                 if (targetsWithCards.length > 0) {
@@ -143,17 +143,14 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                     room.expectedActionPlayers = targetsWithCards;
 
                     targetsWithCards.forEach(targetId => {
-                        const visual = targetId === playerId 
-                            ? Instructions.discard('11') 
-                            : Instructions.discard('11', room.getPlayerUuid(playerId));
-                        
-                        response[targetId] = [
-                            visual,
-                            Instructions.chooseCardFundraiser()
-                        ];
+                        const visual =
+                            targetId === playerId
+                                ? Instructions.discard('11')
+                                : Instructions.discard('11', room.getPlayerUuid(playerId));
+
+                        response[targetId] = [visual, Instructions.chooseCardFundraiser()];
                     });
                 } else {
-
                     room.expectedAction = null;
                     room.expectedActionPlayers = [];
 
@@ -174,8 +171,8 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                     other: [Instructions.discard('12', room.getPlayerUuid(playerId))],
                 };
 
-                const othersWithCards = room.queue.some(id => 
-                    id !== playerId && room.players.get(id).cards.length > 0
+                const othersWithCards = room.queue.some(
+                    id => id !== playerId && room.players.get(id).cards.length > 0
                 );
 
                 if (othersWithCards) {
@@ -199,11 +196,11 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                     hand.splice(nopeIndex, 1);
                 }
 
-                console.log('swap success: ' + success)
+                console.log('swap success: ' + success);
                 if (!success) return null;
                 let action = {
                     [playerId]: [Instructions.discard('13')],
-                    other: [Instructions.discard('13', playerId)]
+                    other: [Instructions.discard('13', playerId)],
                 };
                 if (room.expectedAction) {
                     const instrFn = Instructions[room.expectedAction];
@@ -220,8 +217,8 @@ export default function cardsLogicSimple(room, playerId, cardId, cardsToRemove) 
                     action[playerId].push(Instructions.cancelInteraction());
                     action.other.push(Instructions.cancelInteraction());
                 }
-                console.log(`nu nu nu action`)
-                console.log(action)
+                console.log(`nu nu nu action`);
+                console.log(action);
                 return action;
             }
             return null;

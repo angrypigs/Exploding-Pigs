@@ -24,7 +24,7 @@ const io = new Server(server, {
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (token !== process.env.GAME_SECRET) {
-        const err = new Error("Not authorized");
+        const err = new Error('Not authorized');
         return next(err);
     }
     next();
@@ -40,11 +40,11 @@ const protectedSocketHandler = (ioInstance, roomsMap) => {
 
 protectedSocketHandler(io, rooms);
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 server.listen(port, '0.0.0.0', () => console.log(`Serwer działa na porcie ${port}`));
 
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', err => {
     console.error('CRASH PREVENTED:', err);
 });
 

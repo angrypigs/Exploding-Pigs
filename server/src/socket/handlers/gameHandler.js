@@ -1,5 +1,5 @@
+import { z } from 'zod';
 import { actionsValidation, cardsValidation } from '../../modules/gameLogic.js';
-import { z } from "zod";
 
 export default function gameHandler(io, socket, rooms) {
     const broadcastGameUpdate = (room, actions, turnData) => {
@@ -31,7 +31,7 @@ export default function gameHandler(io, socket, rooms) {
         if (isGameOver) {
             const nickname = room.players.get(isGameOver).nickname ?? '';
             for (const playerId of room.players.keys()) {
-                let isWon = (playerId === isGameOver);
+                let isWon = playerId === isGameOver;
                 io.to(playerId).emit('gameOver', { isWon: isWon, winner: nickname });
             }
         } else if (actions) {
@@ -44,69 +44,54 @@ export default function gameHandler(io, socket, rooms) {
 
     const PlayerIdSchema = z.string().uuid();
 
-    const RoomCodeSchema = z
-        .string()
-        .regex(/^\d{5}$/, "room code must be exactly 5 digits");
+    const RoomCodeSchema = z.string().regex(/^\d{5}$/, 'room code must be exactly 5 digits');
 
-    const CardIndexSchema = z
-        .number()
-        .int()
-        .min(0);
+    const CardIndexSchema = z.number().int().min(0);
 
-    const TakeCardSchema = z.tuple([
-        RoomCodeSchema
+    const TakeCardSchema = z.tuple([RoomCodeSchema]);
+
+    const ThrowCardSchema = z.tuple([RoomCodeSchema, z.array(CardIndexSchema).min(1).max(5)]);
+
+    const GameActionNameSchema = z.enum([
+        'peekFuture',
+        'changeFuture',
+        'choosePlayerSniper',
+        'choosePlayerFavor',
+        'chooseCardFavor',
+        'chooseCardFundraiser',
+        'chooseCardFromPlayerProfanation',
+        'chooseCardFromPlayerPair',
     ]);
 
-    const ThrowCardSchema = z.tuple([
-        RoomCodeSchema,
-        z.array(CardIndexSchema).min(1).max(5)
-    ]);
-
-    const GameActionNameSchema = z.enum(["peekFuture",
-        "changeFuture",
-        "choosePlayerSniper",
-        "choosePlayerFavor",
-        "chooseCardFavor",
-        "chooseCardFundraiser",
-        "chooseCardFromPlayerProfanation",
-        "chooseCardFromPlayerPair"
-    ]);
-
-    const GameActionDataSchema =
-    {
-        "changeFuture": z.array(CardIndexSchema).min(3).max(5),
-        "choosePlayerSniper": PlayerIdSchema,
-        "choosePlayerFavor": PlayerIdSchema,
-        "chooseCardFavor": CardIndexSchema,
-        "chooseCardFundraiser": CardIndexSchema,
-        "chooseCardFromPlayerProfanation": z.object({
+    const GameActionDataSchema = {
+        changeFuture: z.array(CardIndexSchema).min(3).max(5),
+        choosePlayerSniper: PlayerIdSchema,
+        choosePlayerFavor: PlayerIdSchema,
+        chooseCardFavor: CardIndexSchema,
+        chooseCardFundraiser: CardIndexSchema,
+        chooseCardFromPlayerProfanation: z.object({
             player: PlayerIdSchema,
-            card: CardIndexSchema
+            card: CardIndexSchema,
         }),
-        "chooseCardFromPlayerPair": z.object({
+        chooseCardFromPlayerPair: z.object({
             player: PlayerIdSchema,
-            card: CardIndexSchema
-        })
+            card: CardIndexSchema,
+        }),
     };
 
-    const GameActionSchema = z.tuple([
-        RoomCodeSchema,
-        GameActionNameSchema,
-        z.any()
-    ]);
+    const GameActionSchema = z.tuple([RoomCodeSchema, GameActionNameSchema, z.any()]);
 
-
-    socket.on('takeCard', (code) => {
+    socket.on('takeCard', code => {
         //NOTE: checks done
         const parsed = TakeCardSchema.safeParse([code]);
         if (!parsed.success) {
-            console.log("TakeCardSocket Params Check Not Passed !!!\n");
+            console.log('TakeCardSocket Params Check Not Passed !!!\n');
             return;
         }
 
         const [safeRoomCode] = parsed.data;
 
-        console.log("TakeCardSocket Params Check Passed\n");
+        console.log('TakeCardSocket Params Check Passed\n');
         handleRoomAction(safeRoomCode, room => {
             if (room.expectedAction !== null) return null;
             return room.takeCardTop(socket.id);
@@ -117,17 +102,17 @@ export default function gameHandler(io, socket, rooms) {
         //NOTE: checks done
         const parsed = ThrowCardSchema.safeParse([code, cardsIndexes]);
         if (!parsed.success) {
-            console.log("ThrowCardSocket Params Check Not Passed !!!\n");
+            console.log('ThrowCardSocket Params Check Not Passed !!!\n');
             return;
         }
 
         const [safeRoomCode, safeCardsIndexes] = parsed.data;
 
-        console.log("ThrowCardSocket Params Check Passed\n");
+        console.log('ThrowCardSocket Params Check Passed\n');
         handleRoomAction(safeRoomCode, room => {
             const cards = room.indexesToCards(socket.id, safeCardsIndexes);
-            if (room.expectedAction !== null &&
-                !(cards.length === 1 && cards[0] === "13")) return null;
+            if (room.expectedAction !== null && !(cards.length === 1 && cards[0] === '13'))
+                return null;
             const actions = cardsValidation(room, socket.id, cards, safeCardsIndexes);
             if (actions) {
                 return actions;
@@ -142,7 +127,7 @@ export default function gameHandler(io, socket, rooms) {
         console.log(`${actionData}`);
         const parsed = GameActionSchema.safeParse([code, actionName, actionData]);
         if (!parsed.success) {
-            console.log("GameActionSocket Params Check Not Passed !!!\n");
+            console.log('GameActionSocket Params Check Not Passed !!!\n');
             return;
         }
 
@@ -150,19 +135,19 @@ export default function gameHandler(io, socket, rooms) {
 
         const actionDataSchema = GameActionDataSchema[safeActionName];
         if (!actionDataSchema) {
-            console.log("GameActionSocket Params Check Not Passed !!!\n");
+            console.log('GameActionSocket Params Check Not Passed !!!\n');
             return;
         }
 
         const dataParsed = actionDataSchema.safeParse(notsafeActionData);
         if (!dataParsed.success) {
-            console.log("GameActionSocket Params Check Not Passed !!!\n");
+            console.log('GameActionSocket Params Check Not Passed !!!\n');
             return;
         }
 
         const safeActionData = dataParsed.data;
 
-        console.log("GameActionSocket Params Check Passed\n");
+        console.log('GameActionSocket Params Check Passed\n');
 
         handleRoomAction(safeRoomCode, room => {
             if (

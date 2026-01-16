@@ -9,6 +9,7 @@ const socket = io(process.env.EXPO_PUBLIC_API_URL, {
     },
     autoConnect: true,
     reconnection: true,
+    transports: ['polling', 'websocket'],
 });
 
 export function SocketProvider({ children }) {

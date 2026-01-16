@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { data, rotateArray, shuffleArray, insertRandom, addActions } from '../utils.js';
+import { addActions, data, insertRandom, rotateArray, shuffleArray } from '../utils.js';
 import { Instructions } from './instructions.js';
 
 export class Room {
@@ -59,7 +59,7 @@ export class Room {
                 nickname: nickname,
                 name: name,
                 readyFlag: false,
-                cards: []
+                cards: [],
             });
             return true;
         }
@@ -140,7 +140,7 @@ export class Room {
 
             expectedAction: this.expectedAction,
             expectedActionPlayers: [...this.expectedActionPlayers],
-            tempActionPlayer: this.tempActionPlayer
+            tempActionPlayer: this.tempActionPlayer,
         };
 
         for (const key of this.players.keys()) {
@@ -251,11 +251,11 @@ export class Room {
      */
     serveCards(id) {
         if (!this.players.has(id)) return null;
-        
+
         const res = {};
         res['deck'] = '0';
         res['thrown'] = this.thrown.length > 0 ? this.thrown.at(-1) : null;
-        
+
         const cards = {};
         const isAlive = this.queue.includes(id);
 
@@ -266,7 +266,7 @@ export class Room {
             for (let i = 0; i < rotatedQueue.length; i++) {
                 const socketId = rotatedQueue[i];
                 const player = this.players.get(socketId);
-                
+
                 const hand = [];
                 for (const c of player.cards) {
                     hand.push(!c[1] || socketId === id ? c[0] : '0');
@@ -276,7 +276,7 @@ export class Room {
                     hand: hand,
                     publicId: player.publicId,
                     nickname: player.nickname,
-                    isEliminated: false
+                    isEliminated: false,
                 };
             }
         } else {
@@ -290,7 +290,7 @@ export class Room {
             for (let i = 0; i < this.queue.length; i++) {
                 const socketId = this.queue[i];
                 const player = this.players.get(socketId);
-                
+
                 const hand = [];
                 for (const c of player.cards) {
                     hand.push('0');
@@ -299,7 +299,7 @@ export class Room {
                 cards[i + 1] = {
                     hand: hand,
                     publicId: player.publicId,
-                    nickname: player.nickname
+                    nickname: player.nickname,
                 };
             }
         }
@@ -363,18 +363,21 @@ export class Room {
             this.eliminatePlayer(playerId);
 
             return {
-                other: [Instructions.discard('1', this.getPlayerUuid(playerId)), Instructions.elimination(this.getPlayerUuid(playerId))],
-                [playerId]: [Instructions.discard('1'), Instructions.elimination()]
+                other: [
+                    Instructions.discard('1', this.getPlayerUuid(playerId)),
+                    Instructions.elimination(this.getPlayerUuid(playerId)),
+                ],
+                [playerId]: [Instructions.discard('1'), Instructions.elimination()],
             };
         } else {
             player.cards.splice(idx, 1);
             this.thrown.push('2');
-            
+
             insertRandom(this.deck, '1');
 
             return {
                 other: [Instructions.discard('2', this.getPlayerUuid(playerId))],
-                [playerId]: [Instructions.discard('2')]
+                [playerId]: [Instructions.discard('2')],
             };
         }
     }

@@ -1,6 +1,5 @@
-import fs from 'fs';
-
-export const data = JSON.parse(fs.readFileSync('../cards_data.json', 'utf8'));
+import data from '../cards_data.json' with { type: 'json' };
+export { data };
 
 export function shuffleArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {

@@ -1,6 +1,6 @@
-import cardsLogicSimple from '../modules/cardsLogicSimple.js';
 import { insertRandom, shuffleArray } from '../utils.js';
 import cardsLogicMultiple from './cardsLogicMultiple.js';
+import cardsLogicSimple from './cardsLogicSimple.js';
 import { Instructions } from './instructions.js';
 
 export function cardsValidation(room, playerId, cards, cardsToRemove) {
@@ -46,9 +46,7 @@ export function actionsValidation(room, playerId, action_name, data) {
         }
         case 'choosePlayerFavor': {
             const publicId = room.getSocketIdByUuid(data);
-            if (publicId === null ||
-                room.players.get(publicId)?.cards.length === 0
-                ) return null;
+            if (publicId === null || room.players.get(publicId)?.cards.length === 0) return null;
             room.tempActionPlayer = playerId;
             room.expectedAction = 'chooseCardFavor';
             room.expectedActionPlayers = [publicId];
