@@ -2,12 +2,16 @@ import { Room } from '../../modules/room.js';
 
 export default function roomHandler(io, socket, rooms) {
     socket.on('joinRoom', (code, nickname, name) => {
-        if (rooms.has(code)) {
-            let room = rooms.get(code);
-            if (room.addPlayer(socket.id, nickname, name) && !room.room_closed) {
+        const room = rooms.get(code);
+        if (room) {
+            if (room.addPlayer(socket.id, nickname, name) && !room.roomClosed) {
                 socket.join(code);
                 socket.emit('joinRoom', code, nickname, name);
-                io.to(code).emit('refreshRoom', rooms.get(code).getPlayerList());
+                io.to(code).emit(
+                    'refreshRoom',
+                    room.getPlayerList(),
+                    room.getPlayerReadyFlag(socket.id)
+                );
             } else {
                 socket.emit('joinRoom', false, 'Room is full');
             }
@@ -36,16 +40,17 @@ export default function roomHandler(io, socket, rooms) {
     });
 
     socket.on('refreshRoom', code => {
-        if (rooms.has(code)) {
-            socket.emit('refreshRoom', rooms.get(code).getPlayerList());
+        const room = rooms.get(code);
+        if (room) {
+            socket.emit('refreshRoom', room.getPlayerList(), room.getPlayerReadyFlag(socket.id));
         } else {
             socket.emit('refreshGame', null);
         }
     });
 
     socket.on('playerReady', code => {
-        if (rooms.has(code)) {
-            const room = rooms.get(code);
+        const room = rooms.get(code);
+        if (room) {
             let player = room.players.get(socket.id);
             player.readyFlag = !player.readyFlag;
 
@@ -57,10 +62,10 @@ export default function roomHandler(io, socket, rooms) {
                     break;
                 }
             }
-            room.room_closed = false;
+            room.roomClosed = false;
 
             if (isAllReady && room.players.size > 1) {
-                room.room_closed = true;
+                room.roomClosed = true;
                 room.startGame();
                 io.to(code).emit('roomReady');
                 setTimeout(() => {
@@ -80,6 +85,11 @@ export default function roomHandler(io, socket, rooms) {
                 }, 2000);
             } else {
                 console.log('SERVER NOT READY');
+                socket.emit(
+                    'refreshRoom',
+                    rooms.get(code).getPlayerList(),
+                    room.getPlayerReadyFlag(socket.id)
+                );
             }
         }
     });

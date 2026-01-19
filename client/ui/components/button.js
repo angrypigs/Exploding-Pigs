@@ -4,7 +4,7 @@ import { Animated, Text, TouchableOpacity } from 'react-native';
 
 import { stylesButton } from '../../styles/stylesCustomComponents';
 
-export function Button({ title, onPress }) {
+export function Button({ title, onPress, colors = ['#178f23ff', '#3bfc25ff'] }) {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
@@ -31,7 +31,7 @@ export function Button({ title, onPress }) {
                 onPressOut={handlePressOut}
             >
                 <LinearGradient
-                    colors={['#178f23ff', '#3bfc25ff']}
+                    colors={colors}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={stylesButton.button}

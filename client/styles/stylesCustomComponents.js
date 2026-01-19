@@ -24,11 +24,11 @@ export const stylesPlayerList = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         borderColor: '#608252ff',
-        backgroundColor: '#a4cf93ff',
+        backgroundColor: 'rgb(97, 186, 62)',
         width: 300,
     },
     tile: {
-        backgroundColor: '#a3d9ff',
+        backgroundColor: '#a4ffa3',
         padding: 15,
         marginVertical: 5,
         marginHorizontal: 20,

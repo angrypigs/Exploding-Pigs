@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TextInput, View } from 'react-native';
 import { SocketContext } from '../../contexts/socketContext';
 import { stylesMain } from '../../styles/stylesMain';
 import { isGameCode } from '../../utils/gameUtils';
@@ -57,9 +57,9 @@ export default function JoinRoomScreen({ navigation }) {
                     onChangeText={text => setInputs({ ...inputs, joinName: text })}
                     placeholder="Name {optional}"
                 />
-                <TouchableOpacity style={stylesMain.test} onPress={handleSkip}>
+                {/* <TouchableOpacity style={stylesMain.test} onPress={handleSkip}>
                     <Text style={stylesMain.testText}>Skip</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <Button title="Join Room" onPress={handleRoomJoin} />
                 <Button title="Home" onPress={() => navigation.navigate('Home')} />
             </View>

@@ -28,13 +28,13 @@ def load_source_env():
                     env_vars[key.strip()] = value.strip().strip('"').strip("'")
 
         if "CLOUD_URL" not in env_vars or "GAME_SECRET" not in env_vars:
-            print("❌ BŁĄD: W pliku .env brakuje klucza CLOUD_URL lub GAME_SECRET!")
+            print("BŁĄD: W pliku .env brakuje klucza CLOUD_URL lub GAME_SECRET!")
             sys.exit(1)
             
         return env_vars["CLOUD_URL"], env_vars["GAME_SECRET"]
 
     except Exception as e:
-        print(f"❌ Błąd podczas czytania .env: {e}")
+        print(f"Błąd podczas czytania .env: {e}")
         sys.exit(1)
 
 def update_eas_json(client_api_url, game_secret):
@@ -61,7 +61,6 @@ def update_eas_json(client_api_url, game_secret):
         }
     }
 
-    # Wstrzykujemy zmienne
     eas_structure["build"]["preview"]["env"] = {
         "EXPO_PUBLIC_API_URL": client_api_url,
         "EXPO_PUBLIC_GAME_SECRET": game_secret
@@ -110,9 +109,9 @@ def update_local_env(client_api_url, server_ip, game_secret):
         with open("server/.env", "w") as f:
             f.write(server_content)
         
-        print("✅ Pliki .env dla klienta i serwera zaktualizowane.")
+        print("Pliki .env dla klienta i serwera zaktualizowane.")
     except Exception as e:
-        print(f"❌ Błąd zapisu plików .env: {e}")
+        print(f"Błąd zapisu plików .env: {e}")
 
 def main():
     CLOUD_URL, GAME_SECRET = load_source_env()

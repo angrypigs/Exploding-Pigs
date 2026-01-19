@@ -50,6 +50,10 @@ export class Room {
         return list;
     }
 
+    getPlayerReadyFlag(playerId) {
+        return this.players.get(playerId).readyFlag ?? null;
+    }
+
     // ? ========================== NOTE - PLAYER HANDLERS =============================
 
     addPlayer(id, nickname, name) {
