@@ -28,7 +28,7 @@ GAME_SECRET=abc123
 
 (if you're running it only in local LAN web, you don't have to give a real working link to the CLOUD_URL variable, but GAME_SECRET is required)
 
--
+- run Python script that updates the client / server .env files and eas.json file for the app build
 
 ```shell
 py dev_env.py
